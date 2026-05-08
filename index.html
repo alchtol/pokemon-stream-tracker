@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pokemon Stream Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f5;
+    --muted: #7a7a9a;
+    --accent: #ffcc00;
+    --green: #00d68f;
+    --red: #ff4d6d;
+    --amber: #ffaa00;
+    --blue: #4d9fff;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
+
+  /* HEADER */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 20px 12px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .logo span { color: var(--muted); }
+  .sync-status { font-size: 10px; color: var(--muted); font-family: var(--mono); background: var(--surface2); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 5px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  .sync-dot.live { background: var(--green); }
+  .sync-dot.saving { background: var(--amber); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* NAV */
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; padding: 10px 4px 8px; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 9px; font-family: var(--sans); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; transition: color .15s; }
+  .nav-btn.on { color: var(--accent); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  /* PANES */
+  .pane { display: none; padding: 16px 16px 0; }
+  .pane.on { display: block; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card-hd { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 14px; font-family: var(--mono); }
+
+  /* METRICS */
+  .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+  .met { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
+  .met-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; font-family: var(--mono); }
+  .met-v { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .met-v.g { color: var(--green); }
+  .met-v.r { color: var(--red); }
+  .met-v.a { color: var(--amber); }
+
+  /* SLIDERS */
+  .slider-row { margin-bottom: 14px; }
+  .slider-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .slider-label { font-size: 12px; color: var(--muted); }
+  .slider-val { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--accent); }
+  input[type=range] { width: 100%; -webkit-appearance: none; height: 3px; border-radius: 2px; background: var(--surface2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--accent); }
+
+  /* MARGIN BAR */
+  .margin-bar-wrap { height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; margin: 8px 0 4px; }
+  .margin-bar-fill { height: 100%; border-radius: 3px; transition: width .4s, background .4s; }
+  .bar-scale { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  /* PROJ */
+  .proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .proj-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; }
+  .proj-freq { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .proj-val { font-size: 16px; font-weight: 700; font-family: var(--mono); }
+
+  /* INPUTS */
+  input[type=text], input[type=number], textarea {
+    width: 100%; padding: 11px 13px; font-size: 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+    font-family: var(--sans); outline: none; -webkit-appearance: none; margin-bottom: 8px;
+  }
+  input[type=text]:focus, input[type=number]:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  /* BUTTONS */
+  .btn { width: 100%; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text); font-size: 14px; font-family: var(--sans); font-weight: 500; cursor: pointer; transition: background .15s; margin-bottom: 8px; }
+  .btn:active { background: var(--surface2); }
+  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn.primary:active { opacity: .85; }
+  .btn.sm { width: auto; padding: 8px 14px; font-size: 12px; margin-bottom: 0; }
+  .btn.danger { color: var(--red); border-color: rgba(255,77,109,.3); }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 360px; }
+  th { text-align: left; font-size: 9px; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--mono); }
+  tr:last-child td { border-bottom: none; }
+
+  /* BADGES */
+  .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; font-family: var(--mono); }
+  .badge.g { background: rgba(0,214,143,.15); color: var(--green); }
+  .badge.r { background: rgba(255,77,109,.15); color: var(--red); }
+  .badge.a { background: rgba(255,170,0,.15); color: var(--amber); }
+
+  /* PROMO */
+  .promo-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; font-family: var(--mono); }
+  .promo-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 13px; line-height: 1.7; color: var(--text); white-space: pre-wrap; margin-bottom: 8px; }
+
+  /* PRICE LOOKUP */
+  .search-result { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; display: none; }
+  .result-card-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .result-card-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; font-family: var(--mono); }
+  .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .price-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
+  .price-item-l { font-size: 10px; color: var(--muted); margin-bottom: 3px; font-family: var(--mono); }
+  .price-item-v { font-size: 15px; font-weight: 700; font-family: var(--mono); }
+  .stream-notes { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 10px 12px; font-size: 12px; line-height: 1.7; color: var(--muted); margin-bottom: 10px; }
+  .buy-target { display: flex; align-items: center; justify-content: space-between; background: rgba(0,214,143,.08); border: 1px solid rgba(0,214,143,.2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .buy-target-l { font-size: 11px; color: var(--muted); }
+  .buy-target-v { font-size: 17px; font-weight: 700; font-family: var(--mono); color: var(--green); }
+  .tcg-link { display: block; text-align: center; padding: 11px; border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--blue); font-size: 13px; font-weight: 500; text-decoration: none; margin-top: 10px; line-height: 1.5; }
+  .loading-txt { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0; display: none; font-family: var(--mono); }
+  .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.6; font-family: var(--mono); }
+
+  /* INV ROW */
+  .inv-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .inv-row:last-child { border-bottom: none; }
+  .inv-name { flex: 1; font-size: 13px; }
+  .inv-cost { font-size: 12px; font-family: var(--mono); color: var(--red); width: 52px; text-align: right; }
+  .inv-bid { font-size: 12px; font-family: var(--mono); color: var(--green); width: 52px; text-align: right; }
+
+  /* MISC */
+  .empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  .section-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .info-tip { font-size: 12px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; line-height: 1.6; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--green); color: #000; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; z-index: 999; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; font-family: var(--mono); }
+  .toast.show { opacity: 1; }
+  .toast.err { background: var(--red); color: #fff; }
+
+  /* LOADING OVERLAY */
+  .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 16px; }
+  .loading-overlay.hidden { display: none; }
+  .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg">Connecting to database...</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">STREAM<span>/</span>TRACKER</div>
+    <div class="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Connecting</span>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULATOR -->
+<div id="calc" class="pane on">
+  <div class="section-title">Profit calculator</div>
+  <div class="section-sub">Know your numbers before every stream</div>
+  <div class="metrics">
+    <div class="met"><div class="met-l">Buy-in</div><div class="met-v" id="c-bi">$200</div></div>
+    <div class="met"><div class="met-l">Revenue</div><div class="met-v" id="c-rv">$350</div></div>
+    <div class="met"><div class="met-l">Fees + ship</div><div class="met-v r" id="c-fee">-$48</div></div>
+    <div class="met"><div class="met-l">Net profit</div><div class="met-v g" id="c-pr">+$102</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Margin</div>
+    <div class="metrics" style="grid-template-columns:1fr;margin-bottom:10px">
+      <div class="met" style="text-align:center">
+        <div class="met-l">Margin</div>
+        <div class="met-v" id="c-mg" style="font-size:32px">51%</div>
+      </div>
+    </div>
+    <div class="margin-bar-wrap"><div class="margin-bar-fill" id="mgbar" style="width:51%;background:var(--amber)"></div></div>
+    <div class="bar-scale"><span>0%</span><span style="color:var(--amber)">50% min</span><span style="color:var(--green)">100%</span><span>150%</span></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Inputs</div>
+    <div class="slider-row">
+      <div class="slider-top"><span class="slider-label">Card buy-in</span><span class="slider-val" id="sv-bi">$200</span></div>
+      <input type="range" id="s-bi" min="50" max="600" step="10" value="200" oninput="calc()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-top"><span class="slider-label">Stream revenue</span><span class="slider-val" id="sv-rv">$350</span></div>
+      <input type="range" id="s-rv" min="100" max="1200" step="10" value="350" oninput="calc()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-top"><span class="slider-label">Whatnot fee</span><span class="slider-val" id="sv-fee">8%</span></div>
+      <input type="range" id="s-fee" min="0" max="15" step="0.5" value="8" oninput="calc()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-top"><span class="slider-label">Shipping costs</span><span class="slider-val" id="sv-sh">$20</span></div>
+      <input type="range" id="s-sh" min="0" max="80" step="5" value="20" oninput="calc()">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Monthly projection</div>
+    <div class="proj-grid">
+      <div class="proj-item"><div class="proj-freq">2x / mo</div><div class="proj-val" id="p2">+$204</div></div>
+      <div class="proj-item"><div class="proj-freq">4x / mo</div><div class="proj-val g" id="p4">+$408</div></div>
+      <div class="proj-item"><div class="proj-freq">Weekly</div><div class="proj-val g" id="p8">+$816</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICE LOOKUP -->
+<div id="price" class="pane">
+  <div class="section-title">Price lookup</div>
+  <div class="section-sub">Search any Pokemon card</div>
+  <div class="card">
+    <input type="text" id="price-input" placeholder="e.g. Umbreon Illustration Rare, Charizard ex FA" />
+    <button class="btn primary" onclick="doSearch()">Get price estimate</button>
+    <div id="tcg-link-wrap" style="display:none">
+      <a id="tcg-link" class="tcg-link" href="#" target="_blank">📦 Open on TCGPlayer →</a>
+    </div>
+  </div>
+  <div id="ai-loading" class="loading-txt">Looking up card data...</div>
+  <div id="search-result" class="search-result">
+    <div class="result-card-name" id="r-name"></div>
+    <div class="result-card-sub" id="r-sub"></div>
+    <div class="price-grid">
+      <div class="price-item"><div class="price-item-l">Near mint</div><div class="price-item-v g" id="r-nm"></div></div>
+      <div class="price-item"><div class="price-item-l">Lightly played</div><div class="price-item-v a" id="r-lp"></div></div>
+      <div class="price-item"><div class="price-item-l">Heavily played</div><div class="price-item-v r" id="r-hp"></div></div>
+      <div class="price-item"><div class="price-item-l">PSA 9</div><div class="price-item-v" id="r-p9"></div></div>
+      <div class="price-item"><div class="price-item-l">PSA 10</div><div class="price-item-v g" id="r-p10"></div></div>
+      <div class="price-item"><div class="price-item-l">Trend</div><div class="price-item-v" id="r-trend"></div></div>
+    </div>
+    <div class="stream-notes" id="r-notes"></div>
+    <div class="buy-target">
+      <div class="buy-target-l">Suggested buy target</div>
+      <div class="buy-target-v" id="r-buy"></div>
+    </div>
+    <div class="disclaimer" id="r-disclaimer"></div>
+  </div>
+</div>
+
+<!-- INVENTORY -->
+<div id="inv" class="pane">
+  <div class="section-title">Inventory planner</div>
+  <div class="section-sub">Plan your next stream card by card</div>
+  <div class="info-tip">Data saves to your account automatically — accessible on any device.</div>
+  <div class="card">
+    <div class="card-hd">Add a card</div>
+    <input type="text" id="inv-name" placeholder="Card name (e.g. Umbreon IR)" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input type="number" id="inv-cost" placeholder="Cost paid $" min="0" step="0.50" style="margin-bottom:0" />
+      <input type="number" id="inv-bid" placeholder="Start bid $" min="0" step="0.50" style="margin-bottom:0" />
+    </div>
+    <div style="height:8px"></div>
+    <button class="btn primary" onclick="addCard()">+ Add card</button>
+  </div>
+  <div class="metrics" id="inv-metrics" style="display:none">
+    <div class="met"><div class="met-l">Cards</div><div class="met-v" id="im-count">0</div></div>
+    <div class="met"><div class="met-l">Total cost</div><div class="met-v r" id="im-cost">$0</div></div>
+    <div class="met"><div class="met-l">Min revenue</div><div class="met-v a" id="im-min">$0</div></div>
+    <div class="met"><div class="met-l">Target (100%)</div><div class="met-v g" id="im-tgt">$0</div></div>
+  </div>
+  <div class="card" id="inv-card" style="display:none">
+    <div class="card-hd">Next stream cards</div>
+    <div id="inv-list"></div>
+  </div>
+</div>
+
+<!-- STREAM LOG -->
+<div id="log" class="pane">
+  <div class="section-title">Stream log</div>
+  <div class="section-sub">Track every stream — watch your margin grow</div>
+  <div class="info-tip">All streams saved to your account. Access your full history anytime, any device.</div>
+  <div class="card">
+    <div class="card-hd">Log a stream</div>
+    <input type="text" id="l-date" placeholder="Date (e.g. May 8)" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input type="number" id="l-bi" placeholder="Buy-in $" min="0" style="margin-bottom:0" />
+      <input type="number" id="l-rv" placeholder="Revenue $" min="0" style="margin-bottom:0" />
+    </div>
+    <div style="height:8px"></div>
+    <input type="text" id="l-note" placeholder="Notes (optional)" />
+    <button class="btn primary" onclick="addStream()">+ Log stream</button>
+  </div>
+  <div class="metrics" id="log-totals" style="display:none">
+    <div class="met"><div class="met-l">Total profit</div><div class="met-v g" id="lt-pr">$0</div></div>
+    <div class="met"><div class="met-l">Avg margin</div><div class="met-v" id="lt-mg">0%</div></div>
+    <div class="met"><div class="met-l">Best stream</div><div class="met-v g" id="lt-bst">$0</div></div>
+    <div class="met"><div class="met-l">Streams logged</div><div class="met-v" id="lt-ct">0</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">History</div>
+    <div id="log-empty" class="empty">No streams logged yet.<br>Add your first above.</div>
+    <div class="tbl-wrap">
+      <table id="log-table" style="display:none">
+        <thead><tr><th>Date</th><th>Buy-in</th><th>Revenue</th><th>Profit</th><th>Margin</th><th>Status</th></tr></thead>
+        <tbody id="log-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PROMO -->
+<div id="promo" class="pane">
+  <div class="section-title">Promo posts</div>
+  <div class="section-sub">Copy-paste ready for every occasion</div>
+  <div class="card">
+    <div class="promo-label">Stream announcement</div>
+    <div class="promo-box" id="pt1">🔥 Stream going live [DATE] at [TIME] on Whatnot!
+
+Dropping Pokemon singles — illustration rares, full arts, and more going up for bid. Starting bids stay LOW.
+
+✅ 5-star seller | 51 reviews
+✅ Fast shipping every time
+✅ Real cards, real deals
+
+Follow + hit notifications so you don't miss a card 👇
+
+#Whatnot #Pokemon #PokemonCards #IllustrationRare #PokemonTCG</div>
+    <button class="btn sm" onclick="cp('pt1')">Copy</button>
+  </div>
+  <div class="card">
+    <div class="promo-label">Facebook Marketplace — buying collections</div>
+    <div class="promo-box" id="pt2">Hey! I'm interested in your card collection. I buy collections regularly and pay cash — can meet local and move fast if the price works.
+
+Is there any flexibility on the price?</div>
+    <button class="btn sm" onclick="cp('pt2')">Copy</button>
+  </div>
+  <div class="card">
+    <div class="promo-label">Between-stream hype</div>
+    <div class="promo-box" id="pt3">Sourcing for the next stream this week 👀
+
+Pulling some illustration rares and full arts together — you already know it's gonna be heat.
+
+Follow me on Whatnot and drop a 🔥 if you want first look.
+
+#Pokemon #PokemonTCG #Whatnot #IllustrationRare #CardCollector</div>
+    <button class="btn sm" onclick="cp('pt3')">Copy</button>
+  </div>
+  <div class="card">
+    <div class="promo-label">Post-stream thank you</div>
+    <div class="promo-box" id="pt4">That's a wrap 🙏 Thank you everyone who came through tonight!
+
+Every card ships fast and with care — you know how I do it. 5 stars means everything to me and I don't take it lightly.
+
+Next stream coming soon. Follow so you never miss a drop 💪
+
+#Whatnot #Pokemon #PokemonCards #TCG</div>
+    <button class="btn sm" onclick="cp('pt4')">Copy</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn on" onclick="tab('calc',this)"><span class="nav-icon">📊</span>Calc</button>
+  <button class="nav-btn" onclick="tab('price',this)"><span class="nav-icon">🔍</span>Prices</button>
+  <button class="nav-btn" onclick="tab('inv',this)"><span class="nav-icon">📦</span>Inventory</button>
+  <button class="nav-btn" onclick="tab('log',this)"><span class="nav-icon">📋</span>Log</button>
+  <button class="nav-btn" onclick="tab('promo',this)"><span class="nav-icon">📣</span>Promo</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://sltvydesrvockzqjytyp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsdHZ5ZGVzcnZvY2t6cWp5dHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyODA2MTksImV4cCI6MjA5Mzg1NjYxOX0._WsndYEHP18SDeuuNCBpHj-rF46JPFzkJDOXEC7WKik';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── SYNC STATUS ──
+function setSync(state) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + (state === 'live' ? 'live' : state === 'saving' ? 'saving' : '');
+  label.textContent = state === 'live' ? 'Live' : state === 'saving' ? 'Saving...' : 'Offline';
+}
+
+// ── TOAST ──
+function toast(msg, err = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => t.className = 'toast', 2200);
+}
+
+// ── TAB ──
+function tab(id, btn) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo(0, 0);
+}
+
+// ── CALCULATOR ──
+function calc() {
+  const bi = parseInt(document.getElementById('s-bi').value);
+  const rv = parseInt(document.getElementById('s-rv').value);
+  const fee = parseFloat(document.getElementById('s-fee').value);
+  const sh = parseInt(document.getElementById('s-sh').value);
+  const fees = Math.round(rv * fee / 100);
+  const profit = rv - bi - fees - sh;
+  const margin = bi > 0 ? Math.round((profit / bi) * 100) : 0;
+
+  document.getElementById('sv-bi').textContent = '$' + bi;
+  document.getElementById('sv-rv').textContent = '$' + rv;
+  document.getElementById('sv-fee').textContent = fee + '%';
+  document.getElementById('sv-sh').textContent = '$' + sh;
+  document.getElementById('c-bi').textContent = '$' + bi;
+  document.getElementById('c-rv').textContent = '$' + rv;
+  document.getElementById('c-fee').textContent = '-$' + (fees + sh);
+
+  const pel = document.getElementById('c-pr');
+  pel.textContent = (profit >= 0 ? '+$' : '-$') + Math.abs(profit);
+  pel.className = 'met-v ' + (profit >= 0 ? 'g' : 'r');
+
+  const mel = document.getElementById('c-mg');
+  mel.textContent = margin + '%';
+  mel.className = 'met-v ' + (margin >= 100 ? 'g' : margin >= 50 ? 'a' : 'r');
+  mel.style.fontSize = '32px';
+
+  const pct = Math.min(Math.max(margin, 0), 150) / 150 * 100;
+  const bar = document.getElementById('mgbar');
+  bar.style.width = pct.toFixed(1) + '%';
+  bar.style.background = margin >= 100 ? 'var(--green)' : margin >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  [['p2', 2], ['p4', 4], ['p8', 8]].forEach(([id, m]) => {
+    const el = document.getElementById(id);
+    const v = profit * m;
+    el.textContent = (v >= 0 ? '+$' : '-$') + Math.abs(v);
+    el.className = 'proj-val ' + (v >= 0 ? 'g' : 'r');
+  });
+}
+
+// ── PRICE LOOKUP ──
+async function doSearch() {
+  const card = document.getElementById('price-input').value.trim();
+  if (!card) return;
+  const encoded = encodeURIComponent(card);
+  const tcgUrl = 'https://www.tcgplayer.com/search/pokemon/product?q=' + encoded + '&view=grid';
+  document.getElementById('tcg-link').href = tcgUrl;
+  document.getElementById('tcg-link').textContent = '📦 View "' + card + '" on TCGPlayer →';
+  document.getElementById('tcg-link-wrap').style.display = 'block';
+  document.getElementById('search-result').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a Pokemon TCG pricing expert for a Whatnot live stream seller. Respond ONLY with valid JSON, no markdown, no backticks. Format: {"card":"full name","set":"set name","type":"card type","nm":"$X-$X","lp":"$X-$X","hp":"$X-$X","psa9":"$X-$X","psa10":"$X-$X","trend":"Rising/Stable/Falling","stream_notes":"2 sentences on live stream performance","buy_target":"$X","disclaimer":"AI estimate only — verify on TCGPlayer"}`,
+        messages: [{ role: 'user', content: 'Price data for: ' + card }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content.map(i => i.text || '').join('');
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    renderResult(parsed);
+  } catch (e) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('search-result').style.display = 'block';
+    document.getElementById('r-name').textContent = 'AI estimate unavailable';
+    document.getElementById('r-sub').textContent = 'Use the TCGPlayer link above for live pricing';
+    ['r-nm','r-lp','r-hp','r-p9','r-p10','r-trend','r-buy'].forEach(id => document.getElementById(id).textContent = '--');
+    document.getElementById('r-notes').textContent = '';
+    document.getElementById('r-disclaimer').textContent = '';
+  }
+}
+
+function renderResult(d) {
+  document.getElementById('ai-loading').style.display = 'none';
+  document.getElementById('search-result').style.display = 'block';
+  document.getElementById('r-name').textContent = d.card;
+  document.getElementById('r-sub').textContent = d.set + ' · ' + d.type;
+  document.getElementById('r-nm').textContent = d.nm;
+  document.getElementById('r-lp').textContent = d.lp;
+  document.getElementById('r-hp').textContent = d.hp;
+  document.getElementById('r-p9').textContent = d.psa9;
+  document.getElementById('r-p10').textContent = d.psa10;
+  document.getElementById('r-trend').textContent = d.trend;
+  document.getElementById('r-notes').textContent = d.stream_notes;
+  document.getElementById('r-buy').textContent = d.buy_target;
+  document.getElementById('r-disclaimer').textContent = d.disclaimer;
+}
+
+document.getElementById('price-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+// ── INVENTORY (Supabase) ──
+let cards = [];
+
+async function loadCards() {
+  const { data, error } = await sb.from('inventory').select('*').order('created_at', { ascending: false });
+  if (!error) { cards = data || []; renderCards(); }
+}
+
+async function addCard() {
+  const card_name = document.getElementById('inv-name').value.trim();
+  const cost = parseFloat(document.getElementById('inv-cost').value);
+  const start_bid = parseFloat(document.getElementById('inv-bid').value);
+  if (!card_name || isNaN(cost) || isNaN(start_bid)) { toast('Fill in all fields', true); return; }
+  setSync('saving');
+  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, start_bid }]).select();
+  if (error) { toast('Save failed', true); setSync(''); return; }
+  cards.unshift(data[0]);
+  document.getElementById('inv-name').value = '';
+  document.getElementById('inv-cost').value = '';
+  document.getElementById('inv-bid').value = '';
+  renderCards();
+  setSync('live');
+  toast('Card saved ✓');
+}
+
+async function removeCard(id) {
+  setSync('saving');
+  const { error } = await sb.from('inventory').delete().eq('id', id);
+  if (error) { toast('Delete failed', true); setSync('live'); return; }
+  cards = cards.filter(c => c.id !== id);
+  renderCards();
+  setSync('live');
+  toast('Card removed');
+}
+
+function renderCards() {
+  const list = document.getElementById('inv-list');
+  const metrics = document.getElementById('inv-metrics');
+  const invCard = document.getElementById('inv-card');
+  list.innerHTML = '';
+  if (!cards.length) { metrics.style.display = 'none'; invCard.style.display = 'none'; return; }
+  metrics.style.display = 'grid';
+  invCard.style.display = 'block';
+  const tc = cards.reduce((a, c) => a + Number(c.cost), 0);
+  document.getElementById('im-count').textContent = cards.length;
+  document.getElementById('im-cost').textContent = '$' + tc.toFixed(2);
+  document.getElementById('im-min').textContent = '$' + (tc * 1.5).toFixed(2);
+  document.getElementById('im-tgt').textContent = '$' + (tc * 2).toFixed(2);
+  cards.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    row.innerHTML = `
+      <div class="inv-name">${c.card_name}</div>
+      <div class="inv-cost">$${Number(c.cost).toFixed(2)}</div>
+      <div class="inv-bid">$${Number(c.start_bid).toFixed(2)}</div>
+      <button class="btn sm danger" onclick="removeCard('${c.id}')" style="padding:6px 10px;font-size:11px">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+// ── STREAM LOG (Supabase) ──
+let streams = [];
+
+async function loadStreams() {
+  const { data, error } = await sb.from('stream_log').select('*').order('created_at', { ascending: false });
+  if (!error) { streams = data || []; renderStreams(); }
+}
+
+async function addStream() {
+  const date = document.getElementById('l-date').value.trim();
+  const buy_in = parseFloat(document.getElementById('l-bi').value);
+  const revenue = parseFloat(document.getElementById('l-rv').value);
+  const notes = document.getElementById('l-note').value.trim();
+  if (!date || isNaN(buy_in) || isNaN(revenue)) { toast('Fill in date, buy-in, and revenue', true); return; }
+  const fees = Math.round(revenue * 0.08) + 20;
+  const profit = revenue - buy_in - fees;
+  const margin = Math.round((profit / buy_in) * 100);
+  setSync('saving');
+  const { data, error } = await sb.from('stream_log').insert([{ date, buy_in, revenue, profit, margin, notes }]).select();
+  if (error) { toast('Save failed', true); setSync(''); return; }
+  streams.unshift(data[0]);
+  document.getElementById('l-date').value = '';
+  document.getElementById('l-bi').value = '';
+  document.getElementById('l-rv').value = '';
+  document.getElementById('l-note').value = '';
+  renderStreams();
+  setSync('live');
+  toast('Stream logged ✓');
+}
+
+function renderStreams() {
+  const empty = document.getElementById('log-empty');
+  const tbl = document.getElementById('log-table');
+  const totals = document.getElementById('log-totals');
+  if (!streams.length) { empty.style.display = 'block'; tbl.style.display = 'none'; totals.style.display = 'none'; return; }
+  empty.style.display = 'none'; tbl.style.display = 'table'; totals.style.display = 'grid';
+  const body = document.getElementById('log-body');
+  body.innerHTML = '';
+  streams.forEach(s => {
+    const cls = s.margin >= 100 ? 'g' : s.margin >= 50 ? 'a' : 'r';
+    const lbl = s.margin >= 100 ? 'Strong' : s.margin >= 50 ? 'Okay' : 'Thin';
+    body.innerHTML += `<tr>
+      <td>${s.date}</td><td>$${s.buy_in}</td><td>$${s.revenue}</td>
+      <td class="${Number(s.profit) >= 0 ? 'g' : 'r'}">${Number(s.profit) >= 0 ? '+$' : '-$'}${Math.abs(Number(s.profit)).toFixed(0)}</td>
+      <td>${s.margin}%</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+    </tr>`;
+  });
+  const tp = streams.reduce((a, s) => a + Number(s.profit), 0);
+  const bst = Math.max(...streams.map(s => Number(s.profit)));
+  const avgm = Math.round(streams.reduce((a, s) => a + Number(s.margin), 0) / streams.length);
+  document.getElementById('lt-pr').textContent = (tp >= 0 ? '+$' : '-$') + Math.abs(Math.round(tp));
+  document.getElementById('lt-mg').textContent = avgm + '%';
+  document.getElementById('lt-bst').textContent = '+$' + Math.round(bst);
+  document.getElementById('lt-ct').textContent = streams.length;
+}
+
+// ── COPY ──
+function cp(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => toast('Copied ✓'));
+}
+
+// ── INIT ──
+async function init() {
+  calc();
+  try {
+    await Promise.all([loadCards(), loadStreams()]);
+    setSync('live');
+  } catch (e) {
+    setSync('');
+    toast('Database connection issue', true);
+  }
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+init();
+</script>
+</body>
+</html>
