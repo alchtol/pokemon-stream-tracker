@@ -70,6 +70,13 @@
   input[type=range] { width: 100%; -webkit-appearance: none; height: 3px; border-radius: 2px; background: var(--surface2); outline: none; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--accent); }
 
+  /* SYNCED INPUT ROW — slider + type-in */
+  .sync-input-row { margin-bottom: 14px; }
+  .sync-input-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+  .sync-input-top .slider-label { font-size: 12px; color: var(--muted); flex: 1; }
+  .sync-type { width: 80px; padding: 5px 8px; font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--accent); background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); text-align: right; outline: none; -webkit-appearance: none; margin-bottom: 0; }
+  .sync-type:focus { border-color: var(--accent); }
+
   /* MARGIN BAR */
   .margin-bar-wrap { height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; margin: 8px 0 4px; }
   .margin-bar-fill { height: 100%; border-radius: 3px; transition: width .4s, background .4s; }
@@ -132,11 +139,26 @@
   .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.6; font-family: var(--mono); }
 
   /* INV ROW */
-  .inv-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .inv-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .inv-row:last-child { border-bottom: none; }
-  .inv-name { flex: 1; font-size: 13px; }
-  .inv-cost { font-size: 12px; font-family: var(--mono); color: var(--red); width: 52px; text-align: right; }
-  .inv-bid { font-size: 12px; font-family: var(--mono); color: var(--green); width: 52px; text-align: right; }
+  .inv-name { flex: 1; font-size: 13px; min-width: 80px; }
+  .inv-cost { font-size: 12px; font-family: var(--mono); color: var(--red); width: 46px; text-align: right; }
+  .inv-bid { font-size: 12px; font-family: var(--mono); color: var(--green); width: 46px; text-align: right; }
+  .inv-mkt { font-size: 12px; font-family: var(--mono); color: var(--blue); width: 46px; text-align: right; }
+  .inv-target { font-size: 12px; font-family: var(--mono); color: var(--accent); width: 56px; text-align: right; }
+  .inv-profit { font-size: 12px; font-family: var(--mono); font-weight: 700; width: 52px; text-align: right; }
+  .inv-target-label { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+
+  /* INV COLUMN HEADERS */
+  .inv-col-hd { display: flex; align-items: center; gap: 8px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .inv-col-hd span { font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
+  .inv-col-hd .ch-name { flex: 1; }
+  .inv-col-hd .ch-cost { width: 46px; text-align: right; }
+  .inv-col-hd .ch-bid { width: 46px; text-align: right; }
+  .inv-col-hd .ch-mkt { width: 46px; text-align: right; }
+  .inv-col-hd .ch-tgt { width: 56px; text-align: right; }
+  .inv-col-hd .ch-profit { width: 52px; text-align: right; }
+  .inv-col-hd .ch-del { width: 36px; }
 
   /* MISC */
   .empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
@@ -200,10 +222,16 @@
   </div>
   <div class="card">
     <div class="card-hd">Inputs</div>
-    <div class="slider-row">
-      <div class="slider-top"><span class="slider-label">Card buy-in</span><span class="slider-val" id="sv-bi">$200</span></div>
-      <input type="range" id="s-bi" min="50" max="600" step="10" value="200" oninput="calc()">
+
+    <!-- BUY-IN: synced slider + type-in -->
+    <div class="sync-input-row">
+      <div class="sync-input-top">
+        <span class="slider-label">Card buy-in</span>
+        <input type="number" class="sync-type" id="t-bi" value="200" min="50" max="600" step="10" oninput="syncFromType('bi')" />
+      </div>
+      <input type="range" id="s-bi" min="50" max="600" step="10" value="200" oninput="syncFromSlider('bi')">
     </div>
+
     <div class="slider-row">
       <div class="slider-top"><span class="slider-label">Stream revenue</span><span class="slider-val" id="sv-rv">$350</span></div>
       <input type="range" id="s-rv" min="100" max="1200" step="10" value="350" oninput="calc()">
@@ -264,12 +292,29 @@
   <div class="section-title">Inventory planner</div>
   <div class="section-sub">Plan your next stream card by card</div>
   <div class="info-tip">Data saves to your account automatically — accessible on any device.</div>
+
+  <!-- MARGIN TARGET CONTROL -->
+  <div class="card">
+    <div class="card-hd">Target margin for sale prices</div>
+    <div class="sync-input-row" style="margin-bottom:0">
+      <div class="sync-input-top">
+        <span class="slider-label">Profit margin target</span>
+        <input type="number" class="sync-type" id="t-mg" value="100" min="10" max="300" step="5" oninput="syncMarginFromType()" />
+      </div>
+      <input type="range" id="s-mg" min="10" max="300" step="5" value="100" oninput="syncMarginFromSlider()">
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:8px" id="mg-hint">
+      At 100% margin: sell for 2× your cost (after fees)
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-hd">Add a card</div>
     <input type="text" id="inv-name" placeholder="Card name (e.g. Umbreon IR)" />
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <input type="number" id="inv-cost" placeholder="Cost paid $" min="0" step="0.50" style="margin-bottom:0" />
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <input type="number" id="inv-cost" placeholder="Cost $" min="0" step="0.50" style="margin-bottom:0" />
       <input type="number" id="inv-bid" placeholder="Start bid $" min="0" step="0.50" style="margin-bottom:0" />
+      <input type="number" id="inv-mkt" placeholder="Market $ " min="0" step="0.50" style="margin-bottom:0" />
     </div>
     <div style="height:8px"></div>
     <button class="btn primary" onclick="addCard()">+ Add card</button>
@@ -282,6 +327,15 @@
   </div>
   <div class="card" id="inv-card" style="display:none">
     <div class="card-hd">Next stream cards</div>
+    <div class="inv-col-hd">
+      <span class="ch-name">Card</span>
+      <span class="ch-cost">Cost</span>
+      <span class="ch-bid">Bid</span>
+      <span class="ch-mkt">Mkt</span>
+      <span class="ch-tgt">Target</span>
+      <span class="ch-profit">Profit</span>
+      <span class="ch-del"></span>
+    </div>
     <div id="inv-list"></div>
   </div>
 </div>
@@ -413,6 +467,26 @@ function tab(id, btn) {
 }
 
 // ── CALCULATOR ──
+
+// Sync buy-in: slider → type field + recalc
+function syncFromSlider(field) {
+  if (field === 'bi') {
+    const val = document.getElementById('s-bi').value;
+    document.getElementById('t-bi').value = val;
+  }
+  calc();
+}
+
+// Sync buy-in: type field → slider + recalc
+function syncFromType(field) {
+  if (field === 'bi') {
+    let val = parseInt(document.getElementById('t-bi').value) || 50;
+    val = Math.min(Math.max(val, 50), 600);
+    document.getElementById('s-bi').value = val;
+  }
+  calc();
+}
+
 function calc() {
   const bi = parseInt(document.getElementById('s-bi').value);
   const rv = parseInt(document.getElementById('s-rv').value);
@@ -422,7 +496,9 @@ function calc() {
   const profit = rv - bi - fees - sh;
   const margin = bi > 0 ? Math.round((profit / bi) * 100) : 0;
 
-  document.getElementById('sv-bi').textContent = '$' + bi;
+  // keep type field in sync with slider always
+  document.getElementById('t-bi').value = bi;
+
   document.getElementById('sv-rv').textContent = '$' + rv;
   document.getElementById('sv-fee').textContent = fee + '%';
   document.getElementById('sv-sh').textContent = '$' + sh;
@@ -450,6 +526,42 @@ function calc() {
     el.textContent = (v >= 0 ? '+$' : '-$') + Math.abs(v);
     el.className = 'proj-val ' + (v >= 0 ? 'g' : 'r');
   });
+}
+
+// ── INVENTORY MARGIN TARGET ──
+// Whatnot fee ~8%, shipping absorbed into buy cost
+// Target sale = cost * (1 + margin/100) / (1 - 0.08) to net the margin after fees
+function calcTargetSale(cost, marginPct) {
+  const fee = 0.08;
+  const needed = cost * (1 + marginPct / 100);
+  return needed / (1 - fee);
+}
+
+function getMarginTarget() {
+  return parseInt(document.getElementById('s-mg').value) || 100;
+}
+
+function syncMarginFromSlider() {
+  const val = document.getElementById('s-mg').value;
+  document.getElementById('t-mg').value = val;
+  updateMarginHint();
+  renderCards();
+}
+
+function syncMarginFromType() {
+  let val = parseInt(document.getElementById('t-mg').value) || 10;
+  val = Math.min(Math.max(val, 10), 300);
+  document.getElementById('s-mg').value = val;
+  document.getElementById('t-mg').value = val;
+  updateMarginHint();
+  renderCards();
+}
+
+function updateMarginHint() {
+  const m = getMarginTarget();
+  const ex = calcTargetSale(10, m);
+  document.getElementById('mg-hint').textContent =
+    `At ${m}% margin: sell a $10 card for ~$${ex.toFixed(2)} (after 8% Whatnot fee)`;
 }
 
 // ── PRICE LOOKUP ──
@@ -519,14 +631,16 @@ async function addCard() {
   const card_name = document.getElementById('inv-name').value.trim();
   const cost = parseFloat(document.getElementById('inv-cost').value);
   const start_bid = parseFloat(document.getElementById('inv-bid').value);
-  if (!card_name || isNaN(cost) || isNaN(start_bid)) { toast('Fill in all fields', true); return; }
+  const market_value = parseFloat(document.getElementById('inv-mkt').value) || 0;
+  if (!card_name || isNaN(cost) || isNaN(start_bid)) { toast('Fill in name, cost, and bid', true); return; }
   setSync('saving');
-  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, start_bid }]).select();
+  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, start_bid, market_value }]).select();
   if (error) { toast('Save failed', true); setSync(''); return; }
   cards.unshift(data[0]);
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-cost').value = '';
   document.getElementById('inv-bid').value = '';
+  document.getElementById('inv-mkt').value = '';
   renderCards();
   setSync('live');
   toast('Card saved ✓');
@@ -555,13 +669,26 @@ function renderCards() {
   document.getElementById('im-cost').textContent = '$' + tc.toFixed(2);
   document.getElementById('im-min').textContent = '$' + (tc * 1.5).toFixed(2);
   document.getElementById('im-tgt').textContent = '$' + (tc * 2).toFixed(2);
+
+  const marginPct = getMarginTarget();
+
   cards.forEach(c => {
+    const targetSale = calcTargetSale(Number(c.cost), marginPct);
+    const mkt = Number(c.market_value) || 0;
+    const potProfit = mkt - Number(c.cost);
+    const profitColor = potProfit > 0 ? 'var(--green)' : potProfit < 0 ? 'var(--red)' : 'var(--muted)';
+    const profitStr = mkt > 0
+      ? (potProfit >= 0 ? '+$' : '-$') + Math.abs(potProfit).toFixed(2)
+      : '--';
     const row = document.createElement('div');
     row.className = 'inv-row';
     row.innerHTML = `
       <div class="inv-name">${c.card_name}</div>
       <div class="inv-cost">$${Number(c.cost).toFixed(2)}</div>
       <div class="inv-bid">$${Number(c.start_bid).toFixed(2)}</div>
+      <div class="inv-mkt">${mkt > 0 ? '$' + mkt.toFixed(2) : '--'}</div>
+      <div class="inv-target" title="Target sale at ${marginPct}% margin">$${targetSale.toFixed(2)}</div>
+      <div class="inv-profit" style="color:${profitColor}">${profitStr}</div>
       <button class="btn sm danger" onclick="removeCard('${c.id}')" style="padding:6px 10px;font-size:11px">✕</button>`;
     list.appendChild(row);
   });
@@ -632,6 +759,7 @@ function cp(id) {
 // ── INIT ──
 async function init() {
   calc();
+  updateMarginHint();
   try {
     await Promise.all([loadCards(), loadStreams()]);
     setSync('live');
