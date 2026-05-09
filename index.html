@@ -1129,6 +1129,11 @@ function toggleEdit(id) {
   closeAllSwipes();
   document.getElementById('row-' + id).classList.remove('swiped-both');
   form.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    // wire up save/cancel buttons fresh each open
+    form.querySelector('.save-btn').onclick = () => saveEdit(id);
+    form.querySelector('.cancel-btn').onclick = () => cancelEdit(id);
+  }
 }
 function cancelEdit(id) { document.getElementById('edit-' + id).classList.remove('open'); }
 async function saveEdit(id) {
@@ -1213,7 +1218,7 @@ function renderCards() {
             <div></div>
           </div>
           <div class="inv-edit-actions">
-            <button class="save-btn" onclick="saveEdit('${c.id}')">Save</button>
+            <button class="save-btn" onclick="saveEdit('${c.id}')">Save changes</button>
             <button class="cancel-btn" onclick="cancelEdit('${c.id}')">Cancel</button>
           </div>
         </div>
