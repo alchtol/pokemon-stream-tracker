@@ -351,7 +351,7 @@ td.r { color: var(--red); }
   transition: transform 0.28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform; background: var(--bg);
 }
-.inv-row.swiped-both { transform: translateX(-152px); }
+.inv-row.swiped-both { transform: translateX(-76px); }
 
 /* Line 1: card name */
 .inv-row-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.01em; }
@@ -705,7 +705,7 @@ td.r { color: var(--red); }
     <div class="inv-col-hd">
       <span class="ch-name">Card · Cost · Market · Target · Profit</span>
     </div>
-    <div class="swipe-hint">← swipe to edit or remove</div>
+    <div class="swipe-hint">← swipe left to remove</div>
     <div id="inv-list"></div>
   </div>
 </div>
@@ -1202,7 +1202,6 @@ function renderCards() {
 
     wrap.innerHTML = `
       <div class="inv-swipe-actions">
-        <button class="inv-swipe-btn edit" onclick="toggleEdit('${c.id}')">Edit</button>
         <button class="inv-swipe-btn remove" onclick="removeCard('${c.id}')">Remove</button>
       </div>
       <div class="inv-row" id="row-${c.id}">
@@ -1229,17 +1228,6 @@ function renderCards() {
           <div class="inv-profit-bar" style="width:${barPct.toFixed(1)}%;background:${barColor}"></div>
         </div>
         <div class="inv-profit-bar-label">${barLabel}</div>
-        <div class="inv-edit-form" id="edit-${c.id}">
-          <div style="font-size:9px;color:var(--dim);font-family:var(--mono);letter-spacing:0.08em;margin-bottom:10px">TAP OUTSIDE TO SAVE</div>
-          <div class="inv-edit-row">
-            <input type="text" id="en-${c.id}" value="${c.card_name}" placeholder="Card name" />
-            <input type="number" id="ec-${c.id}" value="${Number(c.cost).toFixed(2)}" placeholder="Cost $" min="0" step="0.50" />
-          </div>
-          <div class="inv-edit-row">
-            <input type="number" id="em-${c.id}" value="${mkt > 0 ? mkt.toFixed(2) : ''}" placeholder="Market $" min="0" step="0.50" />
-            <div></div>
-          </div>
-        </div>
       </div>`;
     list.appendChild(wrap);
     addSwipe(c.id);
