@@ -356,7 +356,7 @@ td.r { color: var(--red); }
 /* Line 1: card name */
 .inv-row-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.01em; }
 /* Line 2: data chips */
-.inv-row-data { display: flex; gap: 6px; flex-wrap: wrap; }
+.inv-row-data { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .inv-chip {
   display: flex; flex-direction: column;
   background: var(--s2); border: 1px solid var(--border);
@@ -371,8 +371,66 @@ td.r { color: var(--red); }
 .inv-chip-v.profit-neg { color: var(--red); }
 .inv-chip-v.profit-nil { color: var(--dim); }
 
-/* Edit form */
-.inv-edit-form {
+/* Profit bar per card */
+.inv-profit-bar-wrap { height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; margin-bottom: 2px; }
+.inv-profit-bar { height: 100%; border-radius: 2px; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+.inv-profit-bar-label { font-size: 9px; font-family: var(--mono); color: var(--dim); letter-spacing: 0.06em; }
+
+/* ── SUMMARY CHART ── */
+.inv-chart-card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 12px; display: none; }
+.inv-chart-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 16px; font-family: var(--mono); }
+.inv-chart-bars { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.inv-chart-row { display: flex; flex-direction: column; gap: 4px; }
+.inv-chart-row-top { display: flex; justify-content: space-between; align-items: center; }
+.inv-chart-row-label { font-size: 10px; color: var(--sub); font-family: var(--mono); letter-spacing: 0.06em; }
+.inv-chart-row-val { font-size: 12px; font-weight: 700; font-family: var(--mono); }
+.inv-chart-bar-track { height: 6px; background: var(--s3); border-radius: 3px; overflow: hidden; }
+.inv-chart-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+.inv-chart-bar-fill.cost { background: var(--red); }
+.inv-chart-bar-fill.mkt { background: var(--blue); }
+.inv-chart-bar-fill.target { background: var(--amber); }
+
+/* Donut chart */
+.inv-donut-wrap { display: flex; align-items: center; gap: 20px; margin-top: 4px; }
+.inv-donut { flex-shrink: 0; }
+.inv-donut-legend { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.inv-donut-leg-row { display: flex; align-items: center; gap: 8px; }
+.inv-donut-leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.inv-donut-leg-label { font-size: 11px; color: var(--sub); flex: 1; }
+.inv-donut-leg-val { font-size: 12px; font-weight: 700; font-family: var(--mono); }
+
+/* ── LOG ROWS ── */
+.log-row-wrap { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }
+.log-row-wrap:last-child { border-bottom: none; }
+.log-swipe-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.log-swipe-btn {
+  width: 76px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-family: var(--mono); font-weight: 700;
+  border: none; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.log-swipe-btn.edit { background: var(--blue); color: #000; }
+.log-swipe-btn.remove { background: var(--red); color: #fff; }
+.log-row {
+  padding: 14px 0;
+  transition: transform 0.28s cubic-bezier(.25,.46,.45,.94);
+  will-change: transform; background: var(--bg);
+}
+.log-row.swiped { transform: translateX(-152px); }
+.log-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.log-row-date { font-size: 14px; font-weight: 600; color: var(--text); }
+.log-row-badge { }
+.log-row-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.log-chip { display: flex; flex-direction: column; background: var(--s2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; min-width: 58px; }
+.log-chip-l { font-size: 8px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); margin-bottom: 3px; }
+.log-chip-v { font-size: 13px; font-weight: 700; font-family: var(--mono); }
+.log-edit-form { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px; margin-top: 10px; display: none; }
+.log-edit-form.open { display: block; }
+.log-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.log-edit-grid input { margin-bottom: 0; font-size: 13px; padding: 10px 12px; }
+.log-edit-actions { display: flex; gap: 8px; }
+.log-edit-actions button { flex: 1; padding: 10px 0; font-size: 12px; font-family: var(--mono); font-weight: 700; border-radius: 8px; cursor: pointer; border: 1px solid var(--border2); background: transparent; letter-spacing: 0.06em; text-transform: uppercase; }
+.log-edit-actions .save-btn { background: var(--blue); color: #000; border-color: var(--blue); }
+.log-edit-actions .cancel-btn { color: var(--dim); }
   background: var(--s2); border: 1px solid var(--border);
   border-radius: var(--r-sm); padding: 14px;
   margin-top: 10px; display: none;
@@ -581,6 +639,60 @@ td.r { color: var(--red); }
     <button class="btn primary" onclick="addCard()">Add to inventory</button>
   </div>
 
+  <div class="inv-chart-card" id="inv-chart">
+    <div class="inv-chart-title">Stream snapshot</div>
+    <div class="inv-donut-wrap">
+      <div class="inv-donut">
+        <svg id="inv-donut-svg" width="100" height="100" viewBox="0 0 100 100"></svg>
+      </div>
+      <div class="inv-donut-legend">
+        <div class="inv-donut-leg-row">
+          <div class="inv-donut-leg-dot" style="background:var(--red)"></div>
+          <span class="inv-donut-leg-label">Total cost</span>
+          <span class="inv-donut-leg-val r" id="chart-cost">$0</span>
+        </div>
+        <div class="inv-donut-leg-row">
+          <div class="inv-donut-leg-dot" style="background:var(--blue)"></div>
+          <span class="inv-donut-leg-label">Market value</span>
+          <span class="inv-donut-leg-val b" id="chart-mkt">$0</span>
+        </div>
+        <div class="inv-donut-leg-row">
+          <div class="inv-donut-leg-dot" style="background:var(--amber)"></div>
+          <span class="inv-donut-leg-label">Target revenue</span>
+          <span class="inv-donut-leg-val a" id="chart-tgt">$0</span>
+        </div>
+        <div class="inv-donut-leg-row">
+          <div class="inv-donut-leg-dot" style="background:var(--green)"></div>
+          <span class="inv-donut-leg-label">Potential profit</span>
+          <span class="inv-donut-leg-val g" id="chart-profit">$0</span>
+        </div>
+      </div>
+    </div>
+    <div class="inv-chart-bars" style="margin-top:16px">
+      <div class="inv-chart-row">
+        <div class="inv-chart-row-top">
+          <span class="inv-chart-row-label">Cost vs Market</span>
+          <span class="inv-chart-row-val" id="chart-ratio">—</span>
+        </div>
+        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill cost" id="chart-bar-cost" style="width:0%"></div></div>
+      </div>
+      <div class="inv-chart-row">
+        <div class="inv-chart-row-top">
+          <span class="inv-chart-row-label">Market value</span>
+          <span class="inv-chart-row-val b" id="chart-bar-mkt-val">$0</span>
+        </div>
+        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill mkt" id="chart-bar-mkt" style="width:0%"></div></div>
+      </div>
+      <div class="inv-chart-row">
+        <div class="inv-chart-row-top">
+          <span class="inv-chart-row-label">Target revenue</span>
+          <span class="inv-chart-row-val a" id="chart-bar-tgt-val">$0</span>
+        </div>
+        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill target" id="chart-bar-tgt" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="metrics" id="inv-metrics" style="display:none">
     <div class="met"><div class="met-l">Cards</div><div class="met-v b" id="im-count">0</div></div>
     <div class="met"><div class="met-l">Total cost</div><div class="met-v r" id="im-cost">$0</div></div>
@@ -627,12 +739,7 @@ td.r { color: var(--red); }
   <div class="card">
     <div class="card-hd">History</div>
     <div id="log-empty" class="empty">No streams logged yet.<br>Add your first above.</div>
-    <div class="tbl-wrap">
-      <table id="log-table" style="display:none">
-        <thead><tr><th>Date</th><th>Buy-in</th><th>Revenue</th><th>Profit</th><th>Margin</th><th>Status</th></tr></thead>
-        <tbody id="log-body"></tbody>
-      </table>
-    </div>
+    <div id="log-list"></div>
   </div>
 </div>
 
@@ -642,8 +749,9 @@ td.r { color: var(--red); }
     <div class="page-title">Promo</div>
     <div class="page-sub">Copy-paste ready posts</div>
   </div>
+
   <div class="card">
-    <div class="promo-label">Stream announcement</div>
+    <div class="promo-label">🔥 Stream announcement</div>
     <div class="promo-box" id="pt1">🔥 Stream going live [DATE] at [TIME] on Whatnot!
 
 Dropping Pokemon singles — illustration rares, full arts, and more going up for bid. Starting bids stay LOW.
@@ -657,15 +765,101 @@ Follow + hit notifications so you don't miss a card 👇
 #Whatnot #Pokemon #PokemonCards #IllustrationRare #PokemonTCG</div>
     <button class="btn sm" onclick="cp('pt1')">Copy</button>
   </div>
+
   <div class="card">
-    <div class="promo-label">Facebook Marketplace — buying collections</div>
+    <div class="promo-label">⚡ Flash sale / last-minute stream alert</div>
+    <div class="promo-box" id="pt5">⚡ SURPRISE STREAM — going live in [X] minutes on Whatnot!
+
+Didn't plan this one but the cards are too good not to drop tonight. Illustration rares, full arts, starting bids LOW.
+
+Get in before it's over 👇
+
+#Whatnot #Pokemon #FlashSale #PokemonTCG #IllustrationRare</div>
+    <button class="btn sm" onclick="cp('pt5')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">💎 Grail card / high value drop</div>
+    <div class="promo-box" id="pt6">💎 Dropping something special on the next stream.
+
+Not going to say too much — but if you collect illustration rares and full arts, you're going to want to be there.
+
+Stream is [DATE] at [TIME]. Follow so you don't miss it.
+
+#Pokemon #PokemonTCG #Whatnot #GrailCard #IllustrationRare #FullArt</div>
+    <button class="btn sm" onclick="cp('pt6')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">🏆 Milestone post</div>
+    <div class="promo-box" id="pt7">🏆 [X] followers and [X] 5-star reviews. Can't believe how fast this community has grown.
+
+Every single one of you who has tuned in, bid, bought, or just shown love — thank you. This is just the beginning.
+
+Next stream is going to be the biggest one yet. Stay locked in 🔒
+
+#Whatnot #Pokemon #PokemonTCG #Milestone #ThankYou</div>
+    <button class="btn sm" onclick="cp('pt7')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">⭐ Review request after purchase</div>
+    <div class="promo-box" id="pt8">Hey [NAME]! Just want to make sure everything arrived in perfect condition and you're happy with your card 🙏
+
+If you have a moment, a review on Whatnot means the world to me — it helps more collectors find the stream and keeps the prices fair for everyone.
+
+Either way, hope to see you at the next one! 🔥</div>
+    <button class="btn sm" onclick="cp('pt8')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">👋 New follower welcome</div>
+    <div class="promo-box" id="pt9">👋 Welcome and thank you for the follow!
+
+I stream Pokemon TCG singles bi-weekly on Whatnot — illustration rares, full arts, and hidden gems. Starting bids always stay low and I ship fast.
+
+Turn on notifications so you never miss a stream. Can't wait to see you live 🔥
+
+#Whatnot #Pokemon #PokemonTCG #Welcome</div>
+    <button class="btn sm" onclick="cp('pt9')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">📦 New inventory just arrived</div>
+    <div class="promo-box" id="pt10">📦 New cards just landed and they're CLEAN.
+
+Pulled some illustration rares and full arts that are going straight to the next stream. Not dropping early — you'll have to tune in.
+
+Stream date dropping soon. Follow + notifications so you're ready 👇
+
+#Pokemon #PokemonTCG #Whatnot #NewInventory #IllustrationRare</div>
+    <button class="btn sm" onclick="cp('pt10')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">🤝 Collab / partner stream announcement</div>
+    <div class="promo-box" id="pt11">🤝 Excited to announce I'm teaming up with [PARTNER] for a collab stream on [DATE]!
+
+Double the inventory, double the heat. Illustration rares, full arts, and more — starting bids low across the board.
+
+Two sellers, one stream. You already know it's going to be 🔥
+
+Follow us both and set those notifications 👇
+
+#Whatnot #Pokemon #PokemonTCG #CollabStream #IllustrationRare</div>
+    <button class="btn sm" onclick="cp('pt11')">Copy</button>
+  </div>
+
+  <div class="card">
+    <div class="promo-label">👥 Facebook Marketplace — buying collections</div>
     <div class="promo-box" id="pt2">Hey! I'm interested in your card collection. I buy collections regularly and pay cash — can meet local and move fast if the price works.
 
 Is there any flexibility on the price?</div>
     <button class="btn sm" onclick="cp('pt2')">Copy</button>
   </div>
+
   <div class="card">
-    <div class="promo-label">Between-stream hype</div>
+    <div class="promo-label">👀 Between-stream hype</div>
     <div class="promo-box" id="pt3">Sourcing for the next stream this week 👀
 
 Pulling some illustration rares and full arts together — you already know it's gonna be heat.
@@ -675,8 +869,9 @@ Follow me on Whatnot and drop a 🔥 if you want first look.
 #Pokemon #PokemonTCG #Whatnot #IllustrationRare #CardCollector</div>
     <button class="btn sm" onclick="cp('pt3')">Copy</button>
   </div>
+
   <div class="card">
-    <div class="promo-label">Post-stream thank you</div>
+    <div class="promo-label">🙏 Post-stream thank you</div>
     <div class="promo-box" id="pt4">That's a wrap 🙏 Thank you everyone who came through tonight!
 
 Every card ships fast and with care — you know how I do it. 5 stars means everything to me and I don't take it lightly.
@@ -954,7 +1149,7 @@ function renderCards() {
   const metrics = document.getElementById('inv-metrics');
   const invCard = document.getElementById('inv-card');
   list.innerHTML = '';
-  if (!cards.length) { metrics.style.display = 'none'; invCard.style.display = 'none'; return; }
+  if (!cards.length) { metrics.style.display = 'none'; invCard.style.display = 'none'; document.getElementById('inv-chart').style.display = 'none'; return; }
   metrics.style.display = 'grid'; invCard.style.display = 'block';
   const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
   document.getElementById('im-count').textContent = cards.length;
@@ -973,6 +1168,12 @@ function renderCards() {
     const wrap = document.createElement('div');
     wrap.className = 'inv-row-wrap';
     wrap.id = 'wrap-' + c.id;
+
+    // profit bar: show % of cost recovered by market value, capped at 200%
+    const barPct = mkt > 0 ? Math.min((mkt / Number(c.cost)) * 100, 200) : 0;
+    const barColor = barPct >= 150 ? 'var(--green)' : barPct >= 100 ? 'var(--blue)' : barPct > 0 ? 'var(--amber)' : 'var(--dim)';
+    const barLabel = mkt > 0 ? `${Math.round(barPct)}% of cost recovered` : 'No market value set';
+
     wrap.innerHTML = `
       <div class="inv-swipe-actions">
         <button class="inv-swipe-btn edit" onclick="toggleEdit('${c.id}')">Edit</button>
@@ -998,6 +1199,10 @@ function renderCards() {
             <span class="inv-chip-v ${profitCls}">${profitStr}</span>
           </div>
         </div>
+        <div class="inv-profit-bar-wrap">
+          <div class="inv-profit-bar" style="width:${barPct.toFixed(1)}%;background:${barColor}"></div>
+        </div>
+        <div class="inv-profit-bar-label">${barLabel}</div>
         <div class="inv-edit-form" id="edit-${c.id}">
           <div class="inv-edit-row">
             <input type="text" id="en-${c.id}" value="${c.card_name}" placeholder="Card name" />
@@ -1016,9 +1221,55 @@ function renderCards() {
     list.appendChild(wrap);
     addSwipe(c.id);
   });
+  renderChart(cards, marginPct);
 }
 
-// ── STREAM LOG ──
+function renderChart(cards, marginPct) {
+  const chart = document.getElementById('inv-chart');
+  if (!cards.length) { chart.style.display = 'none'; return; }
+  chart.style.display = 'block';
+
+  const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
+  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
+  const tt = cards.reduce((a,c) => a + calcTargetSale(Number(c.cost), marginPct), 0);
+  const tp = tm - tc;
+  const hasMarket = tm > 0;
+
+  document.getElementById('chart-cost').textContent = '$' + tc.toFixed(2);
+  document.getElementById('chart-mkt').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
+  document.getElementById('chart-tgt').textContent = '$' + tt.toFixed(2);
+  document.getElementById('chart-profit').textContent = hasMarket ? (tp >= 0 ? '+$' : '−$') + Math.abs(tp).toFixed(2) : '--';
+  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '% of cost' : 'No market data';
+  document.getElementById('chart-bar-mkt-val').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
+  document.getElementById('chart-bar-tgt-val').textContent = '$' + tt.toFixed(2);
+
+  const max = Math.max(tc, tm, tt, 1);
+  document.getElementById('chart-bar-cost').style.width = (tc / max * 100).toFixed(1) + '%';
+  document.getElementById('chart-bar-mkt').style.width = hasMarket ? (tm / max * 100).toFixed(1) + '%' : '0%';
+  document.getElementById('chart-bar-tgt').style.width = (tt / max * 100).toFixed(1) + '%';
+
+  // donut
+  const svg = document.getElementById('inv-donut-svg');
+  const cx = 50, cy = 50, r = 38, sw = 10;
+  const circ = 2 * Math.PI * r;
+  const segments = hasMarket
+    ? [ { val: tc, color: 'var(--red)' }, { val: Math.max(tm - tc, 0), color: 'var(--green)' }, { val: Math.max(tt - Math.max(tm, tc), 0), color: 'var(--amber)' } ]
+    : [ { val: tc, color: 'var(--red)' }, { val: Math.max(tt - tc, 0), color: '#222' } ];
+  const total = segments.reduce((a,s) => a + s.val, 0) || 1;
+  let offset = 0;
+  let html = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#111" stroke-width="${sw}"/>`;
+  segments.forEach(seg => {
+    const dash = (seg.val / total) * circ;
+    const gap = circ - dash;
+    const rotate = (offset / total) * 360 - 90;
+    html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-linecap="round" transform="rotate(${rotate.toFixed(2)} ${cx} ${cy})"/>`;
+    offset += seg.val;
+  });
+  const profitPct = hasMarket && tc > 0 ? Math.round((tp / tc) * 100) : null;
+  html += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="white" font-size="13" font-weight="700" font-family="Space Mono,monospace">${profitPct !== null ? (profitPct >= 0 ? '+' : '') + profitPct + '%' : '—'}</text>
+    <text x="${cx}" y="${cy + 10}" text-anchor="middle" fill="#555" font-size="7" font-family="Space Mono,monospace" letter-spacing="1">MARGIN</text>`;
+  svg.innerHTML = html;
+}
 let streams = [];
 async function loadStreams() {
   const { data, error } = await sb.from('stream_log').select('*').order('created_at', { ascending: false });
@@ -1042,22 +1293,55 @@ async function addStream() {
 }
 function renderStreams() {
   const empty = document.getElementById('log-empty');
-  const tbl = document.getElementById('log-table');
+  const list = document.getElementById('log-list');
   const totals = document.getElementById('log-totals');
-  if (!streams.length) { empty.style.display = 'block'; tbl.style.display = 'none'; totals.style.display = 'none'; return; }
-  empty.style.display = 'none'; tbl.style.display = 'table'; totals.style.display = 'grid';
-  const body = document.getElementById('log-body');
-  body.innerHTML = '';
+  list.innerHTML = '';
+  if (!streams.length) { empty.style.display = 'block'; totals.style.display = 'none'; return; }
+  empty.style.display = 'none'; totals.style.display = 'grid';
+
   streams.forEach(s => {
     const cls = s.margin >= 100 ? 'g' : s.margin >= 50 ? 'a' : 'r';
     const lbl = s.margin >= 100 ? 'Strong' : s.margin >= 50 ? 'Okay' : 'Thin';
-    body.innerHTML += `<tr>
-      <td>${s.date}</td><td>$${s.buy_in}</td><td>$${s.revenue}</td>
-      <td class="${Number(s.profit)>=0?'g':'r'}">${Number(s.profit)>=0?'+$':'−$'}${Math.abs(Number(s.profit)).toFixed(0)}</td>
-      <td>${s.margin}%</td>
-      <td><span class="badge ${cls}">${lbl}</span></td>
-    </tr>`;
+    const profitSign = Number(s.profit) >= 0 ? '+$' : '−$';
+    const wrap = document.createElement('div');
+    wrap.className = 'log-row-wrap';
+    wrap.id = 'logwrap-' + s.id;
+    wrap.innerHTML = `
+      <div class="log-swipe-actions">
+        <button class="log-swipe-btn edit" onclick="toggleLogEdit('${s.id}')">Edit</button>
+        <button class="log-swipe-btn remove" onclick="removeStream('${s.id}')">Delete</button>
+      </div>
+      <div class="log-row" id="logrow-${s.id}">
+        <div class="log-row-top">
+          <span class="log-row-date">${s.date}</span>
+          <span class="badge ${cls}">${lbl}</span>
+        </div>
+        <div class="log-row-chips">
+          <div class="log-chip"><span class="log-chip-l">Buy-in</span><span class="log-chip-v r">$${s.buy_in}</span></div>
+          <div class="log-chip"><span class="log-chip-l">Revenue</span><span class="log-chip-v">$${s.revenue}</span></div>
+          <div class="log-chip"><span class="log-chip-l">Profit</span><span class="log-chip-v ${cls}">${profitSign}${Math.abs(Number(s.profit)).toFixed(0)}</span></div>
+          <div class="log-chip"><span class="log-chip-l">Margin</span><span class="log-chip-v ${cls}">${s.margin}%</span></div>
+        </div>
+        ${s.notes ? `<div style="font-size:11px;color:var(--dim);margin-top:8px;font-family:var(--mono)">${s.notes}</div>` : ''}
+        <div class="log-edit-form" id="logedit-${s.id}">
+          <div class="log-edit-grid">
+            <input type="text" id="led-${s.id}" value="${s.date}" placeholder="Date" />
+            <input type="text" id="len-${s.id}" value="${s.notes || ''}" placeholder="Notes" />
+          </div>
+          <div class="log-edit-grid">
+            <input type="number" id="leb-${s.id}" value="${s.buy_in}" placeholder="Buy-in $" min="0" />
+            <input type="number" id="ler-${s.id}" value="${s.revenue}" placeholder="Revenue $" min="0" />
+          </div>
+          <div class="log-edit-actions">
+            <button class="save-btn" onclick="saveStreamEdit('${s.id}')">Save</button>
+            <button class="cancel-btn" onclick="cancelLogEdit('${s.id}')">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    list.appendChild(wrap);
+    addLogSwipe(s.id);
   });
+
   const tp = streams.reduce((a,s) => a + Number(s.profit), 0);
   const bst = Math.max(...streams.map(s => Number(s.profit)));
   const avgm = Math.round(streams.reduce((a,s) => a + Number(s.margin), 0) / streams.length);
@@ -1065,6 +1349,68 @@ function renderStreams() {
   document.getElementById('lt-mg').textContent = avgm + '%';
   document.getElementById('lt-bst').textContent = '+$' + Math.round(bst);
   document.getElementById('lt-ct').textContent = streams.length;
+}
+
+function addLogSwipe(id) {
+  const row = document.getElementById('logrow-' + id);
+  if (!row) return;
+  let startX = 0, startY = 0, curX = 0, dragging = false, swiped = false;
+  row.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    dragging = true; curX = 0;
+    swiped = row.classList.contains('swiped');
+  }, { passive: true });
+  row.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    curX = e.touches[0].clientX - startX;
+    if (Math.abs(e.touches[0].clientY - startY) > Math.abs(curX)) { dragging = false; }
+  }, { passive: true });
+  row.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    if (curX < -50 && !swiped) {
+      document.querySelectorAll('.log-row.swiped').forEach(r => r.classList.remove('swiped'));
+      row.classList.add('swiped');
+    } else if (curX > 30 && swiped) {
+      row.classList.remove('swiped');
+    }
+    curX = 0;
+  });
+}
+
+function toggleLogEdit(id) {
+  const form = document.getElementById('logedit-' + id);
+  const row = document.getElementById('logrow-' + id);
+  const isOpen = form.classList.contains('open');
+  document.querySelectorAll('.log-row.swiped').forEach(r => r.classList.remove('swiped'));
+  row.classList.remove('swiped');
+  form.classList.toggle('open', !isOpen);
+}
+function cancelLogEdit(id) { document.getElementById('logedit-' + id).classList.remove('open'); }
+
+async function saveStreamEdit(id) {
+  const date = document.getElementById('led-' + id).value.trim();
+  const buy_in = parseFloat(document.getElementById('leb-' + id).value);
+  const revenue = parseFloat(document.getElementById('ler-' + id).value);
+  const notes = document.getElementById('len-' + id).value.trim();
+  if (!date || isNaN(buy_in) || isNaN(revenue)) { toast('Fill in all fields', 'err'); return; }
+  const fees = Math.round(revenue * 0.08) + 20;
+  const profit = revenue - buy_in - fees;
+  const margin = Math.round((profit / buy_in) * 100);
+  setSync('saving');
+  const { error } = await sb.from('stream_log').update({ date, buy_in, revenue, profit, margin, notes }).eq('id', id);
+  if (error) { toast('Update failed', 'err'); setSync('live'); return; }
+  const idx = streams.findIndex(s => s.id === id);
+  if (idx !== -1) streams[idx] = { ...streams[idx], date, buy_in, revenue, profit, margin, notes };
+  renderStreams(); setSync('live'); toast('Stream updated ✓');
+}
+
+async function removeStream(id) {
+  setSync('saving');
+  const { error } = await sb.from('stream_log').delete().eq('id', id);
+  if (error) { toast('Delete failed', 'err'); setSync('live'); return; }
+  streams = streams.filter(s => s.id !== id);
+  renderStreams(); setSync('live'); toast('Stream deleted');
 }
 
 // ── COPY ──
