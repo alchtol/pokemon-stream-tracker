@@ -688,7 +688,7 @@ function renderCards() {
       <div class="inv-mkt">${mkt > 0 ? '$' + mkt.toFixed(2) : '--'}</div>
       <div class="inv-target" title="Target sale at ${marginPct}% margin">$${targetSale.toFixed(2)}</div>
       <div class="inv-profit" style="color:${profitColor}">${profitStr}</div>
-      <button class="btn sm danger" onclick="removeCard('${c.id}')" style="padding:6px 10px;font-size:11px">✕</button>`;
+      <button class="btn sm danger" onclick="removeCard('${c.id}')" style="padding:6px 12px;font-size:11px;border-radius:6px">Remove</button>`;
     list.appendChild(row);
   });
 }
