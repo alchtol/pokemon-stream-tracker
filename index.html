@@ -1123,31 +1123,52 @@ function addSwipe(id) {
 function closeAllSwipes() {
   document.querySelectorAll('.inv-row.swiped-both').forEach(r => r.classList.remove('swiped-both'));
 }
+
+let activeEditId = null;
+
 function toggleEdit(id) {
+  // if another form is open, auto-save it first
+  if (activeEditId && activeEditId !== id) saveEdit(activeEditId);
   const form = document.getElementById('edit-' + id);
   const isOpen = form.classList.contains('open');
   closeAllSwipes();
   document.getElementById('row-' + id).classList.remove('swiped-both');
-  form.classList.toggle('open', !isOpen);
   if (!isOpen) {
-    // wire up save/cancel buttons fresh each open
-    form.querySelector('.save-btn').onclick = () => saveEdit(id);
-    form.querySelector('.cancel-btn').onclick = () => cancelEdit(id);
+    form.classList.add('open');
+    activeEditId = id;
+  } else {
+    saveEdit(id);
   }
 }
-function cancelEdit(id) { document.getElementById('edit-' + id).classList.remove('open'); }
+
 async function saveEdit(id) {
+  const form = document.getElementById('edit-' + id);
+  if (!form || !form.classList.contains('open')) return;
   const card_name = document.getElementById('en-' + id).value.trim();
   const cost = parseFloat(document.getElementById('ec-' + id).value);
   const market_value = parseFloat(document.getElementById('em-' + id).value) || 0;
-  if (!card_name || isNaN(cost)) { toast('Name and cost required', 'err'); return; }
+  if (!card_name || isNaN(cost)) { form.classList.remove('open'); activeEditId = null; return; }
+  form.classList.remove('open');
+  activeEditId = null;
   setSync('saving');
   const { error } = await sb.from('inventory').update({ card_name, cost, market_value }).eq('id', id);
   if (error) { toast('Update failed', 'err'); setSync('live'); return; }
   const idx = cards.findIndex(c => c.id === id);
   if (idx !== -1) cards[idx] = { ...cards[idx], card_name, cost, market_value };
-  renderCards(); setSync('live'); toast('Updated ✓');
+  renderCards(); setSync('live'); toast('Saved ✓');
 }
+
+// tap outside any open edit form to auto-save
+document.addEventListener('touchstart', e => {
+  if (!activeEditId) return;
+  const form = document.getElementById('edit-' + activeEditId);
+  if (form && !form.contains(e.target)) saveEdit(activeEditId);
+}, { passive: true });
+document.addEventListener('mousedown', e => {
+  if (!activeEditId) return;
+  const form = document.getElementById('edit-' + activeEditId);
+  if (form && !form.contains(e.target)) saveEdit(activeEditId);
+});
 
 function renderCards() {
   const list = document.getElementById('inv-list');
@@ -1209,6 +1230,7 @@ function renderCards() {
         </div>
         <div class="inv-profit-bar-label">${barLabel}</div>
         <div class="inv-edit-form" id="edit-${c.id}">
+          <div style="font-size:9px;color:var(--dim);font-family:var(--mono);letter-spacing:0.08em;margin-bottom:10px">TAP OUTSIDE TO SAVE</div>
           <div class="inv-edit-row">
             <input type="text" id="en-${c.id}" value="${c.card_name}" placeholder="Card name" />
             <input type="number" id="ec-${c.id}" value="${Number(c.cost).toFixed(2)}" placeholder="Cost $" min="0" step="0.50" />
@@ -1216,10 +1238,6 @@ function renderCards() {
           <div class="inv-edit-row">
             <input type="number" id="em-${c.id}" value="${mkt > 0 ? mkt.toFixed(2) : ''}" placeholder="Market $" min="0" step="0.50" />
             <div></div>
-          </div>
-          <div class="inv-edit-actions">
-            <button class="save-btn" onclick="saveEdit('${c.id}')">Save changes</button>
-            <button class="cancel-btn" onclick="cancelEdit('${c.id}')">Cancel</button>
           </div>
         </div>
       </div>`;
