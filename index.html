@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Stream Tracker</title>
+<title>White Toad TCG</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ── LIGHT MODE (default) ── */
 :root {
   --bg: #f2f3f1;
   --s1: #ffffff;
@@ -27,11 +28,52 @@
   --red: #c0392b;
   --red-glow: rgba(192,57,43,0.1);
   --amber: #b45309;
+  --gold: #c8961a;
+  --gold-glow: rgba(200,150,26,0.15);
+  --gold-dim: rgba(200,150,26,0.08);
+  --mark-color: #0f1f1a;
+  --mark-eye: #ffffff;
+  --header-bg: rgba(242,243,241,0.90);
+  --nav-bg: rgba(255,255,255,0.92);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
   --mono: 'Space Mono', monospace;
   --sans: 'Inter', sans-serif;
   --r: 20px;
   --r-sm: 14px;
   --r-xs: 10px;
+}
+
+/* ── DARK MODE ── */
+body.dark {
+  --bg: #0f1f1a;
+  --s1: #161f1a;
+  --s2: #1c2b22;
+  --s3: #1a3a28;
+  --s4: #1f4530;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f5f0e8;
+  --sub: #5a7a68;
+  --dim: #3a5a48;
+  --accent: #34d399;
+  --accent-glow: rgba(52,211,153,0.15);
+  --accent-dim: rgba(52,211,153,0.07);
+  --navy: #1b2a4a;
+  --green: #34d399;
+  --green-glow: rgba(52,211,153,0.12);
+  --red: #f87171;
+  --red-glow: rgba(248,113,113,0.12);
+  --amber: #fbbf24;
+  --gold: #c8961a;
+  --gold-glow: rgba(200,150,26,0.15);
+  --gold-dim: rgba(200,150,26,0.08);
+  --mark-color: #f5f0e8;
+  --mark-eye: #0f1f1a;
+  --header-bg: rgba(15,31,26,0.92);
+  --nav-bg: rgba(22,31,26,0.95);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -65,11 +107,11 @@ body {
 /* ── HEADER ── */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(242,243,241,0.90);
+  background: var(--header-bg);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid var(--border);
-  padding: 16px 20px;
+  padding: 14px 20px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .logo {
@@ -99,7 +141,7 @@ body {
 /* ── NAV — floating pill ── */
 .nav {
   position: fixed; bottom: 16px; left: 16px; right: 16px;
-  background: rgba(255,255,255,0.92);
+  background: var(--nav-bg);
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
   border: 1px solid var(--border2);
@@ -107,8 +149,22 @@ body {
   display: flex;
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
   z-index: 100;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: var(--nav-shadow);
 }
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  background: none; border: none; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--dim); font-size: 16px;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle:active { background: var(--s3); }
+
+/* ── TOAD MARK SVG ── */
+.toad-mark { flex-shrink: 0; }
 .nav-btn {
   flex: 1; background: none; border: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -144,7 +200,7 @@ body {
   border-radius: var(--r);
   padding: 20px;
   margin-bottom: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  box-shadow: var(--card-shadow);
 }
 .card-hd {
   font-size: 11px; font-weight: 600; text-transform: uppercase;
@@ -166,16 +222,17 @@ body {
 .met-v.r { color: var(--red); }
 .met-v.a { color: var(--amber); }
 .met-v.b { color: var(--navy); }
+.met-v.gold { color: var(--gold); }
 
 /* ── HERO METRIC ── */
 .hero-met {
-  background: linear-gradient(160deg, #ffffff 0%, #f0f5f2 100%);
+  background: linear-gradient(160deg, var(--s1) 0%, var(--s2) 100%);
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 28px 20px 20px;
   text-align: center;
   margin-bottom: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  box-shadow: var(--card-shadow);
 }
 .hero-met-l { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 10px; }
 .hero-met-v { font-size: 64px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.04em; line-height: 1; }
@@ -192,7 +249,7 @@ body {
 .slider-row { margin-bottom: 22px; }
 .slider-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .slider-label { font-size: 13px; color: var(--sub); font-weight: 400; }
-.slider-val { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--accent); }
+.slider-val { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--gold); }
 input[type=range] {
   width: 100%; -webkit-appearance: none;
   height: 3px; border-radius: 2px;
@@ -214,12 +271,12 @@ input[type=range]::-webkit-slider-thumb {
 .sync-type {
   width: 80px; padding: 6px 10px;
   font-size: 14px; font-weight: 600; font-family: var(--mono);
-  color: var(--accent); background: var(--s2);
+  color: var(--gold); background: var(--s2);
   border: 1px solid var(--border2); border-radius: var(--r-xs);
   text-align: right; outline: none; -webkit-appearance: none; margin-bottom: 0;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.sync-type:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.sync-type:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
 
 /* ── PROJECTION ── */
 .proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -341,7 +398,7 @@ input::placeholder { color: var(--dim); }
 .inv-chip-l { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 4px; }
 .inv-chip-v { font-size: 14px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.01em; }
 .inv-chip-v.cost { color: var(--red); }
-.inv-chip-v.mkt { color: var(--navy); }
+.inv-chip-v.mkt { color: var(--gold); }
 .inv-chip-v.target { color: var(--amber); }
 .inv-chip-v.profit-pos { color: var(--green); }
 .inv-chip-v.profit-neg { color: var(--red); }
@@ -361,7 +418,7 @@ input::placeholder { color: var(--dim); }
 .inv-chart-bar-track { height: 6px; background: var(--s3); border-radius: 3px; overflow: hidden; }
 .inv-chart-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
 .inv-chart-bar-fill.cost { background: var(--red); }
-.inv-chart-bar-fill.mkt { background: var(--navy); }
+.inv-chart-bar-fill.mkt { background: var(--gold); }
 .inv-chart-bar-fill.target { background: var(--amber); }
 .inv-donut-wrap { display: flex; align-items: center; gap: 20px; }
 .inv-donut { flex-shrink: 0; }
@@ -442,16 +499,50 @@ input::placeholder { color: var(--dim); }
 
 <!-- LOADING -->
 <div class="loading-overlay" id="loading-overlay">
-  <div class="load-ring"></div>
-  <div class="load-txt">Initializing</div>
+  <svg width="48" height="60" viewBox="0 0 58 54" style="margin-bottom:4px">
+    <defs><clipPath id="loadClip"><polygon points="0,0 58,0 26,54 0,54"/></clipPath></defs>
+    <g clip-path="url(#loadClip)">
+      <ellipse cx="28" cy="30" rx="26" ry="22" fill="#1a4731"/>
+      <ellipse cx="10" cy="14" rx="10" ry="12" fill="#1a4731"/>
+      <circle cx="10" cy="15" r="5" fill="#f2f3f1"/>
+      <ellipse cx="28" cy="46" rx="20" ry="6" fill="#1a4731"/>
+    </g>
+    <line x1="58" y1="0" x2="26" y2="54" stroke="#1a4731" stroke-width="1.5"/>
+  </svg>
+  <div style="font-family:var(--sans);font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.02em">White Toad</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:0.2em;margin-top:2px">TCG</div>
+  <div class="load-ring" style="margin-top:16px"></div>
 </div>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">Stream<em>OS</em></div>
-  <div class="sync-pill">
-    <div class="sync-dot" id="sync-dot"></div>
-    <span id="sync-label">Connecting</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <!-- White Toad diagonal half-face mark -->
+    <svg class="toad-mark" width="38" height="48" viewBox="0 0 58 54" style="overflow:visible">
+      <defs>
+        <clipPath id="halfFace">
+          <polygon points="0,0 58,0 26,54 0,54"/>
+        </clipPath>
+      </defs>
+      <g clip-path="url(#halfFace)">
+        <ellipse cx="28" cy="30" rx="26" ry="22" fill="var(--mark-color)"/>
+        <ellipse cx="10" cy="14" rx="10" ry="12" fill="var(--mark-color)"/>
+        <circle cx="10" cy="15" r="5" fill="var(--mark-eye)"/>
+        <ellipse cx="28" cy="46" rx="20" ry="6" fill="var(--mark-color)"/>
+      </g>
+      <line x1="58" y1="0" x2="26" y2="54" stroke="var(--mark-color)" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-0.02em;color:var(--text);line-height:1.1">White Toad</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:0.2em;line-height:1.2">TCG</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark mode">🌙</button>
+    <div class="sync-pill">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Connecting</span>
+    </div>
   </div>
 </div>
 
@@ -595,9 +686,9 @@ input::placeholder { color: var(--dim); }
           <span class="inv-donut-leg-val r" id="chart-cost">$0</span>
         </div>
         <div class="inv-donut-leg-row">
-          <div class="inv-donut-leg-dot" style="background:var(--blue)"></div>
+          <div class="inv-donut-leg-dot" style="background:var(--gold)"></div>
           <span class="inv-donut-leg-label">Market value</span>
-          <span class="inv-donut-leg-val b" id="chart-mkt">$0</span>
+          <span class="inv-donut-leg-val" style="color:var(--gold)" id="chart-mkt">$0</span>
         </div>
         <div class="inv-donut-leg-row">
           <div class="inv-donut-leg-dot" style="background:var(--amber)"></div>
@@ -702,10 +793,11 @@ Dropping Pokemon singles — illustration rares, full arts, and more going up fo
 ✅ 5-star seller | 51 reviews
 ✅ Fast shipping every time
 ✅ Real cards, real deals
+✅ 267 followers strong
 
 Follow + hit notifications so you don't miss a card 👇
 
-#Whatnot #Pokemon #PokemonCards #IllustrationRare #PokemonTCG</div>
+#Whatnot #Pokemon #PokemonCards #IllustrationRare #PokemonTCG #WhiteToadTCG</div>
     <button class="btn sm" onclick="cp('pt1')">Copy</button>
   </div>
 
@@ -735,13 +827,13 @@ Stream is [DATE] at [TIME]. Follow so you don't miss it.
 
   <div class="card">
     <div class="promo-label">🏆 Milestone post</div>
-    <div class="promo-box" id="pt7">🏆 [X] followers and [X] 5-star reviews. Can't believe how fast this community has grown.
+    <div class="promo-box" id="pt7">🏆 267 followers and 51 5-star reviews. Can't believe how fast this community has grown.
 
 Every single one of you who has tuned in, bid, bought, or just shown love — thank you. This is just the beginning.
 
 Next stream is going to be the biggest one yet. Stay locked in 🔒
 
-#Whatnot #Pokemon #PokemonTCG #Milestone #ThankYou</div>
+#Whatnot #Pokemon #PokemonTCG #WhiteToadTCG #Milestone #ThankYou</div>
     <button class="btn sm" onclick="cp('pt7')">Copy</button>
   </div>
 
@@ -807,9 +899,9 @@ Is there any flexibility on the price?</div>
 
 Pulling some illustration rares and full arts together — you already know it's gonna be heat.
 
-Follow me on Whatnot and drop a 🔥 if you want first look.
+Follow White Toad TCG on Whatnot and drop a 🔥 if you want first look.
 
-#Pokemon #PokemonTCG #Whatnot #IllustrationRare #CardCollector</div>
+#Pokemon #PokemonTCG #Whatnot #WhiteToadTCG #IllustrationRare #CardCollector</div>
     <button class="btn sm" onclick="cp('pt3')">Copy</button>
   </div>
 
@@ -817,11 +909,11 @@ Follow me on Whatnot and drop a 🔥 if you want first look.
     <div class="promo-label">🙏 Post-stream thank you</div>
     <div class="promo-box" id="pt4">That's a wrap 🙏 Thank you everyone who came through tonight!
 
-Every card ships fast and with care — you know how I do it. 5 stars means everything to me and I don't take it lightly.
+Every card ships fast and with care — that's the White Toad TCG standard. 5 stars means everything to me and I don't take it lightly.
 
 Next stream coming soon. Follow so you never miss a drop 💪
 
-#Whatnot #Pokemon #PokemonCards #TCG</div>
+#Whatnot #Pokemon #PokemonCards #WhiteToadTCG #TCG</div>
     <button class="btn sm" onclick="cp('pt4')">Copy</button>
   </div>
 </div>
@@ -1207,7 +1299,7 @@ function renderChart(cards, marginPct) {
   const cx = 50, cy = 50, r = 38, sw = 10;
   const circ = 2 * Math.PI * r;
   const segments = hasMarket
-    ? [ { val: tc, color: 'var(--red)' }, { val: Math.max(tm - tc, 0), color: 'var(--green)' }, { val: Math.max(tt - Math.max(tm, tc), 0), color: 'var(--amber)' } ]
+    ? [ { val: tc, color: 'var(--red)' }, { val: Math.max(tm - tc, 0), color: 'var(--gold)' }, { val: Math.max(tt - Math.max(tm, tc), 0), color: 'var(--amber)' } ]
     : [ { val: tc, color: 'var(--red)' }, { val: Math.max(tt - tc, 0), color: '#d8dbd5' } ];
   const total = segments.reduce((a,s) => a + s.val, 0) || 1;
   let offset = 0;
@@ -1372,8 +1464,29 @@ function cp(id) {
   navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => toast('Copied ✓'));
 }
 
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('wt-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = isDark ? '☀️' : '🌙';
+}
+
+function applyTheme() {
+  const saved = localStorage.getItem('wt-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const useDark = saved ? saved === 'dark' : prefersDark;
+  if (useDark) {
+    document.body.classList.add('dark');
+    document.getElementById('theme-btn').textContent = '☀️';
+  } else {
+    document.body.classList.remove('dark');
+    document.getElementById('theme-btn').textContent = '🌙';
+  }
+}
+
 // ── INIT ──
 async function init() {
+  applyTheme();
   calc(); updateMarginHint();
   try {
     await Promise.all([loadCards(), loadStreams()]);
