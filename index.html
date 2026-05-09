@@ -138,27 +138,48 @@
   .loading-txt { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0; display: none; font-family: var(--mono); }
   .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.6; font-family: var(--mono); }
 
-  /* INV ROW */
-  .inv-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .inv-row:last-child { border-bottom: none; }
-  .inv-name { flex: 1; font-size: 13px; min-width: 80px; }
+  /* INV ROW — swipe to reveal */
+  .inv-row-wrap { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .inv-row-wrap:last-child { border-bottom: none; }
+
+  .inv-swipe-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+  .inv-swipe-btn { width: 80px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: var(--mono); font-weight: 700; border: none; cursor: pointer; transition: opacity .15s; }
+  .inv-swipe-btn.edit { background: var(--blue); color: #fff; }
+  .inv-swipe-btn.remove { background: var(--red); color: #fff; }
+  .inv-swipe-btn:active { opacity: .8; }
+
+  .inv-row { padding: 12px 0; transition: transform .25s cubic-bezier(.25,.46,.45,.94); will-change: transform; background: var(--surface); cursor: grab; user-select: none; }
+  .inv-row.swiped-edit { transform: translateX(-80px); }
+  .inv-row.swiped-both { transform: translateX(-160px); }
+
+  .inv-row-data { display: flex; align-items: center; gap: 0; width: 100%; }
+  .inv-name { flex: 1; font-size: 13px; min-width: 80px; padding-right: 8px; }
   .inv-cost { font-size: 12px; font-family: var(--mono); color: var(--red); width: 46px; text-align: right; }
-  .inv-bid { font-size: 12px; font-family: var(--mono); color: var(--green); width: 46px; text-align: right; }
   .inv-mkt { font-size: 12px; font-family: var(--mono); color: var(--blue); width: 46px; text-align: right; }
   .inv-target { font-size: 12px; font-family: var(--mono); color: var(--accent); width: 56px; text-align: right; }
   .inv-profit { font-size: 12px; font-family: var(--mono); font-weight: 700; width: 52px; text-align: right; }
-  .inv-target-label { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+
+  /* INV EDIT FORM */
+  .inv-edit-form { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px; margin-top: 8px; display: none; }
+  .inv-edit-form.open { display: block; }
+  .inv-edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .inv-edit-row input { margin-bottom: 0; font-size: 13px; padding: 8px 10px; }
+  .inv-edit-actions { display: flex; gap: 8px; }
+  .inv-edit-actions button { flex: 1; padding: 8px 0; font-size: 12px; font-family: var(--mono); font-weight: 600; border-radius: 6px; cursor: pointer; border: 1px solid var(--border2); background: transparent; }
+  .inv-edit-actions .save-btn { background: var(--accent); color: #000; border-color: var(--accent); }
+  .inv-edit-actions .cancel-btn { color: var(--muted); }
+
+  /* swipe hint label */
+  .swipe-hint { font-size: 10px; color: var(--muted); font-family: var(--mono); text-align: right; padding: 4px 0 8px; opacity: 0.6; }
 
   /* INV COLUMN HEADERS */
-  .inv-col-hd { display: flex; align-items: center; gap: 8px; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .inv-col-hd { display: flex; align-items: center; gap: 0; padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
   .inv-col-hd span { font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
-  .inv-col-hd .ch-name { flex: 1; }
+  .inv-col-hd .ch-name { flex: 1; padding-right: 8px; }
   .inv-col-hd .ch-cost { width: 46px; text-align: right; }
-  .inv-col-hd .ch-bid { width: 46px; text-align: right; }
   .inv-col-hd .ch-mkt { width: 46px; text-align: right; }
   .inv-col-hd .ch-tgt { width: 56px; text-align: right; }
   .inv-col-hd .ch-profit { width: 52px; text-align: right; }
-  .inv-col-hd .ch-del { width: 36px; }
 
   /* MISC */
   .empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
@@ -333,8 +354,8 @@
       <span class="ch-mkt">Mkt</span>
       <span class="ch-tgt">Target</span>
       <span class="ch-profit">Profit</span>
-      <span class="ch-del"></span>
     </div>
+    <div class="swipe-hint">← swipe left to edit or remove</div>
     <div id="inv-list"></div>
   </div>
 </div>
@@ -656,6 +677,84 @@ async function removeCard(id) {
   toast('Card removed');
 }
 
+function addSwipe(id) {
+  const row = document.getElementById('row-' + id);
+  if (!row) return;
+  let startX = 0, startY = 0, currentX = 0, dragging = false, swiped = false;
+
+  const closeAll = () => {
+    document.querySelectorAll('.inv-row.swiped-both, .inv-row.swiped-edit').forEach(r => {
+      r.classList.remove('swiped-both', 'swiped-edit');
+    });
+  };
+
+  row.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    swiped = row.classList.contains('swiped-both') || row.classList.contains('swiped-edit');
+  }, { passive: true });
+
+  row.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    currentX = e.touches[0].clientX - startX;
+    const currentY = e.touches[0].clientY - startY;
+    if (Math.abs(currentY) > Math.abs(currentX)) { dragging = false; return; }
+  }, { passive: true });
+
+  row.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    if (currentX < -60 && !swiped) {
+      closeAll();
+      row.classList.add('swiped-both');
+    } else if (currentX > 40 && swiped) {
+      row.classList.remove('swiped-both', 'swiped-edit');
+    } else if (!swiped) {
+      // short tap — close others
+    }
+    currentX = 0;
+  });
+}
+
+function closeAllSwipes() {
+  document.querySelectorAll('.inv-row.swiped-both, .inv-row.swiped-edit').forEach(r => {
+    r.classList.remove('swiped-both', 'swiped-edit');
+  });
+}
+
+function toggleEdit(id) {
+  const form = document.getElementById('edit-' + id);
+  const row = document.getElementById('row-' + id);
+  const isOpen = form.classList.contains('open');
+  closeAllSwipes();
+  if (!isOpen) {
+    form.classList.add('open');
+    row.classList.remove('swiped-both', 'swiped-edit');
+  } else {
+    form.classList.remove('open');
+  }
+}
+
+function cancelEdit(id) {
+  document.getElementById('edit-' + id).classList.remove('open');
+}
+
+async function saveEdit(id) {
+  const card_name = document.getElementById('en-' + id).value.trim();
+  const cost = parseFloat(document.getElementById('ec-' + id).value);
+  const market_value = parseFloat(document.getElementById('em-' + id).value) || 0;
+  if (!card_name || isNaN(cost)) { toast('Name and cost required', true); return; }
+  setSync('saving');
+  const { error } = await sb.from('inventory').update({ card_name, cost, market_value }).eq('id', id);
+  if (error) { toast('Update failed', true); setSync('live'); return; }
+  const idx = cards.findIndex(c => c.id === id);
+  if (idx !== -1) cards[idx] = { ...cards[idx], card_name, cost, market_value };
+  renderCards();
+  setSync('live');
+  toast('Card updated ✓');
+}
+
 function renderCards() {
   const list = document.getElementById('inv-list');
   const metrics = document.getElementById('inv-metrics');
@@ -680,16 +779,40 @@ function renderCards() {
     const profitStr = mkt > 0
       ? (potProfit >= 0 ? '+$' : '-$') + Math.abs(potProfit).toFixed(2)
       : '--';
-    const row = document.createElement('div');
-    row.className = 'inv-row';
-    row.innerHTML = `
-      <div class="inv-name">${c.card_name}</div>
-      <div class="inv-cost">$${Number(c.cost).toFixed(2)}</div>
-      <div class="inv-mkt">${mkt > 0 ? '$' + mkt.toFixed(2) : '--'}</div>
-      <div class="inv-target" title="Target sale at ${marginPct}% margin">$${targetSale.toFixed(2)}</div>
-      <div class="inv-profit" style="color:${profitColor}">${profitStr}</div>
-      <button class="btn sm danger" onclick="removeCard('${c.id}')" style="padding:6px 12px;font-size:11px;border-radius:6px">Remove</button>`;
-    list.appendChild(row);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'inv-row-wrap';
+    wrap.id = 'wrap-' + c.id;
+    wrap.innerHTML = `
+      <div class="inv-swipe-actions">
+        <button class="inv-swipe-btn edit" onclick="toggleEdit('${c.id}')">Edit</button>
+        <button class="inv-swipe-btn remove" onclick="removeCard('${c.id}')">Remove</button>
+      </div>
+      <div class="inv-row" id="row-${c.id}">
+        <div class="inv-row-data">
+          <div class="inv-name">${c.card_name}</div>
+          <div class="inv-cost">$${Number(c.cost).toFixed(2)}</div>
+          <div class="inv-mkt">${mkt > 0 ? '$' + mkt.toFixed(2) : '--'}</div>
+          <div class="inv-target" title="Target sale at ${marginPct}% margin">$${targetSale.toFixed(2)}</div>
+          <div class="inv-profit" style="color:${profitColor}">${profitStr}</div>
+        </div>
+        <div class="inv-edit-form" id="edit-${c.id}">
+          <div class="inv-edit-row">
+            <input type="text" id="en-${c.id}" value="${c.card_name}" placeholder="Card name" />
+            <input type="number" id="ec-${c.id}" value="${Number(c.cost).toFixed(2)}" placeholder="Cost $" min="0" step="0.50" />
+          </div>
+          <div class="inv-edit-row">
+            <input type="number" id="em-${c.id}" value="${mkt > 0 ? mkt.toFixed(2) : ''}" placeholder="Market $" min="0" step="0.50" />
+            <div></div>
+          </div>
+          <div class="inv-edit-actions">
+            <button class="save-btn" onclick="saveEdit('${c.id}')">Save</button>
+            <button class="cancel-btn" onclick="cancelEdit('${c.id}')">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    list.appendChild(wrap);
+    addSwipe(c.id);
   });
 }
 
