@@ -264,6 +264,7 @@
     <button class="btn primary" onclick="doSearch()">Get price estimate</button>
     <div id="tcg-link-wrap" style="display:none">
       <a id="tcg-link" class="tcg-link" href="#" target="_blank">📦 Open on TCGPlayer →</a>
+      <a id="ebay-link" class="tcg-link" href="#" target="_blank" style="color:var(--amber)">🛒 Search sold listings on eBay →</a>
     </div>
   </div>
   <div id="ai-loading" class="loading-txt">Looking up card data...</div>
@@ -570,8 +571,11 @@ async function doSearch() {
   if (!card) return;
   const encoded = encodeURIComponent(card);
   const tcgUrl = 'https://www.tcgplayer.com/search/pokemon/product?q=' + encoded + '&view=grid';
+  const ebayUrl = 'https://www.ebay.com/sch/i.html?_nkw=' + encoded + '+pokemon+card&LH_Sold=1&LH_Complete=1';
   document.getElementById('tcg-link').href = tcgUrl;
   document.getElementById('tcg-link').textContent = '📦 View "' + card + '" on TCGPlayer →';
+  document.getElementById('ebay-link').href = ebayUrl;
+  document.getElementById('ebay-link').textContent = '🛒 "' + card + '" sold listings on eBay →';
   document.getElementById('tcg-link-wrap').style.display = 'block';
   document.getElementById('search-result').style.display = 'none';
   document.getElementById('ai-loading').style.display = 'block';
