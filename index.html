@@ -8,24 +8,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #f2f1f6;
+  --bg: #f2f3f1;
   --s1: #ffffff;
-  --s2: #f7f7f9;
-  --s3: #ebebef;
-  --s4: #e0e0e6;
+  --s2: #f5f6f4;
+  --s3: #e8eae6;
+  --s4: #d8dbd5;
   --border: rgba(0,0,0,0.07);
-  --border2: rgba(0,0,0,0.12);
-  --text: #1a1a1f;
-  --sub: #6b6878;
-  --dim: #a0a0b0;
-  --accent: #7c5cfc;
-  --accent-glow: rgba(124,92,252,0.15);
-  --accent-dim: rgba(124,92,252,0.07);
-  --green: #1ab974;
-  --green-glow: rgba(26,185,116,0.1);
-  --red: #e5484d;
-  --red-glow: rgba(229,72,77,0.1);
-  --amber: #d97706;
+  --border2: rgba(0,0,0,0.13);
+  --text: #0f1f1a;
+  --sub: #4a5e54;
+  --dim: #8a9e94;
+  --accent: #1a4731;
+  --accent-glow: rgba(26,71,49,0.14);
+  --accent-dim: rgba(26,71,49,0.07);
+  --navy: #1b2a4a;
+  --green: #1a7a4a;
+  --green-glow: rgba(26,122,74,0.1);
+  --red: #c0392b;
+  --red-glow: rgba(192,57,43,0.1);
+  --amber: #b45309;
   --mono: 'Space Mono', monospace;
   --sans: 'Inter', sans-serif;
   --r: 20px;
@@ -64,7 +65,7 @@ body {
 /* ── HEADER ── */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(242,241,246,0.88);
+  background: rgba(242,243,241,0.90);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid var(--border);
@@ -164,11 +165,11 @@ body {
 .met-v.g { color: var(--green); }
 .met-v.r { color: var(--red); }
 .met-v.a { color: var(--amber); }
-.met-v.b { color: var(--accent); }
+.met-v.b { color: var(--navy); }
 
 /* ── HERO METRIC ── */
 .hero-met {
-  background: linear-gradient(160deg, #ffffff 0%, #f7f6fb 100%);
+  background: linear-gradient(160deg, #ffffff 0%, #f0f5f2 100%);
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 28px 20px 20px;
@@ -203,7 +204,7 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--accent);
   cursor: pointer;
   border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(124,92,252,0.35);
+  box-shadow: 0 2px 8px rgba(26,71,49,0.3);
 }
 
 /* ── SYNCED INPUT ── */
@@ -259,7 +260,7 @@ input::placeholder { color: var(--dim); }
 .btn.primary {
   background: var(--accent); color: #fff;
   border-color: var(--accent); font-weight: 600;
-  box-shadow: 0 4px 16px rgba(167,139,250,0.25);
+  box-shadow: 0 4px 16px rgba(26,71,49,0.25);
   letter-spacing: -0.01em;
 }
 .btn.primary:active { box-shadow: none; }
@@ -340,7 +341,7 @@ input::placeholder { color: var(--dim); }
 .inv-chip-l { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 4px; }
 .inv-chip-v { font-size: 14px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.01em; }
 .inv-chip-v.cost { color: var(--red); }
-.inv-chip-v.mkt { color: var(--accent); }
+.inv-chip-v.mkt { color: var(--navy); }
 .inv-chip-v.target { color: var(--amber); }
 .inv-chip-v.profit-pos { color: var(--green); }
 .inv-chip-v.profit-neg { color: var(--red); }
@@ -360,7 +361,7 @@ input::placeholder { color: var(--dim); }
 .inv-chart-bar-track { height: 6px; background: var(--s3); border-radius: 3px; overflow: hidden; }
 .inv-chart-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
 .inv-chart-bar-fill.cost { background: var(--red); }
-.inv-chart-bar-fill.mkt { background: var(--accent); }
+.inv-chart-bar-fill.mkt { background: var(--navy); }
 .inv-chart-bar-fill.target { background: var(--amber); }
 .inv-donut-wrap { display: flex; align-items: center; gap: 20px; }
 .inv-donut { flex-shrink: 0; }
@@ -379,7 +380,7 @@ input::placeholder { color: var(--dim); }
   font-size: 12px; font-family: var(--sans); font-weight: 600;
   border: none; cursor: pointer;
 }
-.log-swipe-btn.edit { background: var(--accent); color: #fff; }
+.log-swipe-btn.edit { background: var(--navy); color: #fff; }
 .log-swipe-btn.remove { background: var(--red); color: #fff; }
 .log-row {
   padding: 16px 0;
@@ -399,7 +400,7 @@ input::placeholder { color: var(--dim); }
 .log-edit-grid input { margin-bottom: 0; font-size: 14px; padding: 12px 14px; }
 .log-edit-actions { display: flex; gap: 10px; }
 .log-edit-actions button { flex: 1; padding: 12px 0; font-size: 13px; font-family: var(--sans); font-weight: 600; border-radius: var(--r-xs); cursor: pointer; border: 1px solid var(--border2); background: transparent; }
-.log-edit-actions .save-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+.log-edit-actions .save-btn { background: var(--navy); color: #fff; border-color: var(--navy); }
 .log-edit-actions .cancel-btn { color: var(--dim); }
 
 /* column headers */
@@ -1207,10 +1208,10 @@ function renderChart(cards, marginPct) {
   const circ = 2 * Math.PI * r;
   const segments = hasMarket
     ? [ { val: tc, color: 'var(--red)' }, { val: Math.max(tm - tc, 0), color: 'var(--green)' }, { val: Math.max(tt - Math.max(tm, tc), 0), color: 'var(--amber)' } ]
-    : [ { val: tc, color: 'var(--red)' }, { val: Math.max(tt - tc, 0), color: '#222' } ];
+    : [ { val: tc, color: 'var(--red)' }, { val: Math.max(tt - tc, 0), color: '#d8dbd5' } ];
   const total = segments.reduce((a,s) => a + s.val, 0) || 1;
   let offset = 0;
-  let html = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#111" stroke-width="${sw}"/>`;
+  let html = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8eae6" stroke-width="${sw}"/>`;
   segments.forEach(seg => {
     const dash = (seg.val / total) * circ;
     const gap = circ - dash;
@@ -1219,8 +1220,8 @@ function renderChart(cards, marginPct) {
     offset += seg.val;
   });
   const profitPct = hasMarket && tc > 0 ? Math.round((tp / tc) * 100) : null;
-  html += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="white" font-size="13" font-weight="700" font-family="Space Mono,monospace">${profitPct !== null ? (profitPct >= 0 ? '+' : '') + profitPct + '%' : '—'}</text>
-    <text x="${cx}" y="${cy + 10}" text-anchor="middle" fill="#555" font-size="7" font-family="Space Mono,monospace" letter-spacing="1">MARGIN</text>`;
+  html += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="#0f1f1a" font-size="13" font-weight="700" font-family="Space Mono,monospace">${profitPct !== null ? (profitPct >= 0 ? '+' : '') + profitPct + '%' : '—'}</text>
+    <text x="${cx}" y="${cy + 10}" text-anchor="middle" fill="#8a9e94" font-size="7" font-family="Space Mono,monospace" letter-spacing="1">MARGIN</text>`;
   svg.innerHTML = html;
 }
 let streams = [];
