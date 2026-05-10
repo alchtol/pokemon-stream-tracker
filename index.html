@@ -576,23 +576,8 @@ input::placeholder { color: var(--dim); }
     <div class="page-sub">Compare platforms side by side</div>
   </div>
 
-  <!-- Platform comparison grid -->
-  <div class="card" id="platform-compare" style="display:none">
-    <div class="card-hd">Platform comparison</div>
-    <div id="platform-grid" style="display:flex;flex-direction:column;gap:10px"></div>
-  </div>
-
-  <div class="hero-met">
-    <div class="hero-met-l">Best platform profit</div>
-    <div class="hero-met-v g" id="c-best">—</div>
-    <div style="font-size:12px;color:var(--sub);margin-top:6px" id="c-best-platform">Set your inputs below</div>
-    <div class="margin-bar-wrap"><div class="margin-bar-fill" id="mgbar" style="width:0%;background:var(--amber)"></div></div>
-    <div class="bar-scale"><span>0</span><span>50%</span><span>100%</span><span>150%</span></div>
-  </div>
-
   <div class="card">
     <div class="card-hd">Inputs</div>
-
     <div class="sync-input-row">
       <div class="sync-input-top">
         <span class="slider-label">Acquisition cost</span>
@@ -600,7 +585,6 @@ input::placeholder { color: var(--dim); }
       </div>
       <input type="range" id="s-bi" min="0" max="600" step="10" value="200" oninput="syncFromSlider('bi')">
     </div>
-
     <div class="slider-row">
       <div class="slider-top"><span class="slider-label">Sale price</span><span class="slider-val" id="sv-rv">$350</span></div>
       <input type="range" id="s-rv" min="100" max="1200" step="10" value="350" oninput="calc()">
@@ -613,6 +597,20 @@ input::placeholder { color: var(--dim); }
       <div class="slider-top"><span class="slider-label">Tax rate</span><span class="slider-val" id="sv-tax">0%</span></div>
       <input type="range" id="s-tax" min="0" max="15" step="0.5" value="0" oninput="calc()">
     </div>
+  </div>
+
+  <!-- Platform comparison — now above hero -->
+  <div class="card" id="platform-compare" style="display:none">
+    <div class="card-hd">Platform comparison</div>
+    <div id="platform-grid" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+
+  <div class="hero-met">
+    <div class="hero-met-l">Best platform profit</div>
+    <div class="hero-met-v g" id="c-best">—</div>
+    <div style="font-size:12px;color:var(--sub);margin-top:6px" id="c-best-platform">Set your inputs above</div>
+    <div class="margin-bar-wrap"><div class="margin-bar-fill" id="mgbar" style="width:0%;background:var(--amber)"></div></div>
+    <div class="bar-scale"><span>0</span><span>50%</span><span>100%</span><span>150%</span></div>
   </div>
 
   <div class="card">
@@ -677,6 +675,19 @@ input::placeholder { color: var(--dim); }
     <div class="page-sub">Plan your next stream</div>
   </div>
 
+  <!-- ADD CARD first -->
+  <div class="card">
+    <div class="card-hd">Add card</div>
+    <input type="text" id="inv-name" placeholder="Card name" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input type="number" id="inv-cost" placeholder="Cost $" min="0" step="0.50" style="margin-bottom:0" />
+      <input type="number" id="inv-mkt" placeholder="Market $" min="0" step="0.50" style="margin-bottom:0" />
+    </div>
+    <div style="height:10px"></div>
+    <button class="btn primary" onclick="addCard()">Add to inventory</button>
+  </div>
+
+  <!-- MARGIN TARGET after add -->
   <div class="card">
     <div class="card-hd">Margin target</div>
     <div class="sync-input-row" style="margin-bottom:0">
@@ -689,47 +700,16 @@ input::placeholder { color: var(--dim); }
     <div class="hint-txt" id="mg-hint">At 100% — sell a $10 card for ~$10.87 after fees</div>
   </div>
 
-  <div class="card">
-    <div class="card-hd">Add card</div>
-    <input type="text" id="inv-name" placeholder="Card name" />
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <input type="number" id="inv-cost" placeholder="Cost $" min="0" step="0.50" style="margin-bottom:0" />
-      <input type="number" id="inv-mkt" placeholder="Market $" min="0" step="0.50" style="margin-bottom:0" />
-    </div>
-    <div style="height:10px"></div>
-    <button class="btn primary" onclick="addCard()">Add to inventory</button>
-  </div>
-
+  <!-- STREAM SNAPSHOT — clean, no donut -->
   <div class="inv-chart-card" id="inv-chart">
     <div class="inv-chart-title">Stream snapshot</div>
-    <div class="inv-donut-wrap">
-      <div class="inv-donut">
-        <svg id="inv-donut-svg" width="100" height="100" viewBox="0 0 100 100"></svg>
-      </div>
-      <div class="inv-donut-legend">
-        <div class="inv-donut-leg-row">
-          <div class="inv-donut-leg-dot" style="background:var(--red)"></div>
-          <span class="inv-donut-leg-label">Total cost</span>
-          <span class="inv-donut-leg-val r" id="chart-cost">$0</span>
-        </div>
-        <div class="inv-donut-leg-row">
-          <div class="inv-donut-leg-dot" style="background:var(--gold)"></div>
-          <span class="inv-donut-leg-label">Market value</span>
-          <span class="inv-donut-leg-val" style="color:var(--gold)" id="chart-mkt">$0</span>
-        </div>
-        <div class="inv-donut-leg-row">
-          <div class="inv-donut-leg-dot" style="background:var(--amber)"></div>
-          <span class="inv-donut-leg-label">Target revenue</span>
-          <span class="inv-donut-leg-val a" id="chart-tgt">$0</span>
-        </div>
-        <div class="inv-donut-leg-row">
-          <div class="inv-donut-leg-dot" style="background:var(--green)"></div>
-          <span class="inv-donut-leg-label">Potential profit</span>
-          <span class="inv-donut-leg-val g" id="chart-profit">$0</span>
-        </div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+      <div class="met"><div class="met-l">Cards</div><div class="met-v b" id="im-count">0</div></div>
+      <div class="met"><div class="met-l">Total cost</div><div class="met-v r" id="im-cost">$0</div></div>
+      <div class="met"><div class="met-l">Market value</div><div class="met-v" style="color:var(--gold)" id="chart-mkt">$0</div></div>
+      <div class="met"><div class="met-l">Potential profit</div><div class="met-v g" id="chart-profit">$0</div></div>
     </div>
-    <div class="inv-chart-bars" style="margin-top:16px">
+    <div class="inv-chart-bars">
       <div class="inv-chart-row">
         <div class="inv-chart-row-top">
           <span class="inv-chart-row-label">Cost vs Market</span>
@@ -739,14 +719,7 @@ input::placeholder { color: var(--dim); }
       </div>
       <div class="inv-chart-row">
         <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Market value</span>
-          <span class="inv-chart-row-val b" id="chart-bar-mkt-val">$0</span>
-        </div>
-        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill mkt" id="chart-bar-mkt" style="width:0%"></div></div>
-      </div>
-      <div class="inv-chart-row">
-        <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Target revenue</span>
+          <span class="inv-chart-row-label">Cost vs Target</span>
           <span class="inv-chart-row-val a" id="chart-bar-tgt-val">$0</span>
         </div>
         <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill target" id="chart-bar-tgt" style="width:0%"></div></div>
@@ -754,13 +727,7 @@ input::placeholder { color: var(--dim); }
     </div>
   </div>
 
-  <div class="metrics" id="inv-metrics" style="display:none">
-    <div class="met"><div class="met-l">Cards</div><div class="met-v b" id="im-count">0</div></div>
-    <div class="met"><div class="met-l">Total cost</div><div class="met-v r" id="im-cost">$0</div></div>
-    <div class="met"><div class="met-l">Min revenue</div><div class="met-v a" id="im-min">$0</div></div>
-    <div class="met"><div class="met-l">Target 100%</div><div class="met-v g" id="im-tgt">$0</div></div>
-  </div>
-
+  <!-- CARD LIST -->
   <div class="card" id="inv-card" style="display:none">
     <div class="card-hd">Stream cards</div>
     <div class="inv-col-hd">
@@ -1513,17 +1480,34 @@ document.addEventListener('mousedown', e => {
 
 function renderCards() {
   const list = document.getElementById('inv-list');
-  const metrics = document.getElementById('inv-metrics');
   const invCard = document.getElementById('inv-card');
+  const chart = document.getElementById('inv-chart');
   list.innerHTML = '';
-  if (!cards.length) { metrics.style.display = 'none'; invCard.style.display = 'none'; document.getElementById('inv-chart').style.display = 'none'; return; }
-  metrics.style.display = 'grid'; invCard.style.display = 'block';
+  if (!cards.length) {
+    invCard.style.display = 'none';
+    chart.style.display = 'none';
+    return;
+  }
+  invCard.style.display = 'block';
+  chart.style.display = 'block';
+
   const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
+  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
+  const marginPct = getMarginTarget();
+  const tt = cards.reduce((a,c) => a + calcTargetSale(Number(c.cost), marginPct), 0);
+  const tp = tm - tc;
+  const hasMarket = tm > 0;
+
   document.getElementById('im-count').textContent = cards.length;
   document.getElementById('im-cost').textContent = '$' + tc.toFixed(2);
-  document.getElementById('im-min').textContent = '$' + (tc * 1.5).toFixed(2);
-  document.getElementById('im-tgt').textContent = '$' + (tc * 2).toFixed(2);
-  const marginPct = getMarginTarget();
+  document.getElementById('chart-mkt').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
+  document.getElementById('chart-profit').textContent = hasMarket ? (tp >= 0 ? '+$' : '−$') + Math.abs(tp).toFixed(2) : '--';
+  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '%' : '—';
+  document.getElementById('chart-bar-tgt-val').textContent = '$' + tt.toFixed(2);
+
+  const max = Math.max(tc, tm, tt, 1);
+  document.getElementById('chart-bar-cost').style.width = (tc / max * 100).toFixed(1) + '%';
+  document.getElementById('chart-bar-tgt').style.width = (tt / max * 100).toFixed(1) + '%';
 
   cards.forEach(c => {
     const targetSale = calcTargetSale(Number(c.cost), marginPct);
@@ -1587,40 +1571,11 @@ function renderChart(cards, marginPct) {
   const tp = tm - tc;
   const hasMarket = tm > 0;
 
-  document.getElementById('chart-cost').textContent = '$' + tc.toFixed(2);
-  document.getElementById('chart-mkt').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
-  document.getElementById('chart-tgt').textContent = '$' + tt.toFixed(2);
-  document.getElementById('chart-profit').textContent = hasMarket ? (tp >= 0 ? '+$' : '−$') + Math.abs(tp).toFixed(2) : '--';
-  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '% of cost' : 'No market data';
-  document.getElementById('chart-bar-mkt-val').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
+  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '%' : '—';
   document.getElementById('chart-bar-tgt-val').textContent = '$' + tt.toFixed(2);
-
   const max = Math.max(tc, tm, tt, 1);
   document.getElementById('chart-bar-cost').style.width = (tc / max * 100).toFixed(1) + '%';
-  document.getElementById('chart-bar-mkt').style.width = hasMarket ? (tm / max * 100).toFixed(1) + '%' : '0%';
   document.getElementById('chart-bar-tgt').style.width = (tt / max * 100).toFixed(1) + '%';
-
-  // donut
-  const svg = document.getElementById('inv-donut-svg');
-  const cx = 50, cy = 50, r = 38, sw = 10;
-  const circ = 2 * Math.PI * r;
-  const segments = hasMarket
-    ? [ { val: tc, color: 'var(--red)' }, { val: Math.max(tm - tc, 0), color: 'var(--gold)' }, { val: Math.max(tt - Math.max(tm, tc), 0), color: 'var(--amber)' } ]
-    : [ { val: tc, color: 'var(--red)' }, { val: Math.max(tt - tc, 0), color: '#d8dbd5' } ];
-  const total = segments.reduce((a,s) => a + s.val, 0) || 1;
-  let offset = 0;
-  let html = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8eae6" stroke-width="${sw}"/>`;
-  segments.forEach(seg => {
-    const dash = (seg.val / total) * circ;
-    const gap = circ - dash;
-    const rotate = (offset / total) * 360 - 90;
-    html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-linecap="round" transform="rotate(${rotate.toFixed(2)} ${cx} ${cy})"/>`;
-    offset += seg.val;
-  });
-  const profitPct = hasMarket && tc > 0 ? Math.round((tp / tc) * 100) : null;
-  html += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="#0f1f1a" font-size="13" font-weight="700" font-family="Space Mono,monospace">${profitPct !== null ? (profitPct >= 0 ? '+' : '') + profitPct + '%' : '—'}</text>
-    <text x="${cx}" y="${cy + 10}" text-anchor="middle" fill="#8a9e94" font-size="7" font-family="Space Mono,monospace" letter-spacing="1">MARGIN</text>`;
-  svg.innerHTML = html;
 }
 let streams = [];
 async function loadStreams() {
@@ -2102,47 +2057,11 @@ function calcGradeOrRaw() {
   }
 }
 
-// ── CAMERA ──
-let cameraStream = null;
-
-async function startCamera() {
-  document.getElementById('camera-wrap').style.display = 'block';
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    document.getElementById('camera-feed').srcObject = cameraStream;
-  } catch(e) {
-    toast('Camera access denied', 'err');
-    document.getElementById('camera-wrap').style.display = 'none';
-  }
-}
-
-function stopCamera() {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-  document.getElementById('camera-wrap').style.display = 'none';
-}
-
-function capturePhoto() {
-  const video = document.getElementById('camera-feed');
-  const canvas = document.getElementById('capture-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg');
-  showCenterPreview(dataUrl);
-  stopCamera();
-}
-
 function analyzeCenter(input) {
   if (!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => showCenterPreview(e.target.result);
+  reader.onload = e => initRulers(e.target.result);
   reader.readAsDataURL(input.files[0]);
-}
-
-function showCenterPreview(src) {
-  document.getElementById('center-img').src = src;
-  document.getElementById('center-preview-wrap').style.display = 'block';
-  toast('Photo loaded — enter border measurements below');
 }
 
 // ── THEME TOGGLE ──
