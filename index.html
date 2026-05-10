@@ -630,6 +630,36 @@ input::placeholder { color: var(--dim); }
     <div class="page-sub">Search any Pokemon card</div>
   </div>
   <div class="card">
+    <!-- Camera scan button -->
+    <button class="btn" onclick="startPriceScan()" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;border-color:var(--gold);color:var(--gold);font-weight:600">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Scan card with camera
+    </button>
+
+    <!-- Camera view for price scan -->
+    <div id="price-camera-wrap" style="display:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px;text-align:center">Point camera at the card — make sure the name and set are visible</div>
+      <video id="price-camera-feed" style="width:100%;border-radius:var(--r-sm);background:#000;display:block" autoplay playsinline></video>
+      <canvas id="price-capture-canvas" style="display:none"></canvas>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="capturePricePhoto()" style="margin-bottom:0">📸 Capture</button>
+        <button class="btn danger" onclick="stopPriceCamera()" style="margin-bottom:0">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Scan loading state -->
+    <div id="scan-loading" style="display:none;text-align:center;padding:16px 0;color:var(--sub);font-size:13px">
+      <div class="load-ring" style="margin:0 auto 10px"></div>
+      Reading card...
+    </div>
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--dim)">or search manually</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
     <input type="text" id="price-input" placeholder="Card name (e.g. Umbreon Illustration Rare)" />
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <input type="text" id="price-set" placeholder="Set (e.g. Paldean Fates)" style="margin-bottom:0"/>
@@ -712,14 +742,14 @@ input::placeholder { color: var(--dim); }
     <div class="inv-chart-bars">
       <div class="inv-chart-row">
         <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Cost vs Market</span>
+          <span class="inv-chart-row-label">Value gain</span>
           <span class="inv-chart-row-val" id="chart-ratio">—</span>
         </div>
         <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill cost" id="chart-bar-cost" style="width:0%"></div></div>
       </div>
       <div class="inv-chart-row">
         <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Cost vs Target</span>
+          <span class="inv-chart-row-label">Goal to hit</span>
           <span class="inv-chart-row-val a" id="chart-bar-tgt-val">$0</span>
         </div>
         <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill target" id="chart-bar-tgt" style="width:0%"></div></div>
@@ -1312,6 +1342,74 @@ function updateMarginHint() {
   const m = getMarginTarget();
   document.getElementById('mg-hint').textContent =
     `At ${m}% — sell a $10 card for ~$${calcTargetSale(10,m).toFixed(2)} after fees`;
+}
+
+// ── PRICE LOOKUP ──
+// ── PRICE CAMERA SCAN ──
+let priceCameraStream = null;
+
+async function startPriceScan() {
+  document.getElementById('price-camera-wrap').style.display = 'block';
+  try {
+    priceCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    document.getElementById('price-camera-feed').srcObject = priceCameraStream;
+  } catch(e) {
+    toast('Camera access denied', 'err');
+    document.getElementById('price-camera-wrap').style.display = 'none';
+  }
+}
+
+function stopPriceCamera() {
+  if (priceCameraStream) { priceCameraStream.getTracks().forEach(t => t.stop()); priceCameraStream = null; }
+  document.getElementById('price-camera-wrap').style.display = 'none';
+}
+
+async function capturePricePhoto() {
+  const video = document.getElementById('price-camera-feed');
+  const canvas = document.getElementById('price-capture-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  stopPriceCamera();
+
+  const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+  document.getElementById('scan-loading').style.display = 'block';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: 'You are a Pokemon TCG card identification expert. Look at the card image and extract the card name, set name, and card number. Respond ONLY with valid JSON, no markdown: {"name":"card name","set":"set name","number":"card number or empty string if not visible"}',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+            { type: 'text', text: 'What Pokemon card is this? Extract the name, set, and number.' }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content.map(i => i.text || '').join('');
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+    // Auto-fill the search fields
+    document.getElementById('price-input').value = parsed.name || '';
+    document.getElementById('price-set').value = parsed.set || '';
+    document.getElementById('price-num').value = parsed.number || '';
+    document.getElementById('scan-loading').style.display = 'none';
+
+    toast('Card identified — running price lookup...');
+    doSearch();
+  } catch(e) {
+    document.getElementById('scan-loading').style.display = 'none';
+    toast('Could not read card — try manually', 'err');
+  }
 }
 
 // ── PRICE LOOKUP ──
