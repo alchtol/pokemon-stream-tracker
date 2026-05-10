@@ -48,19 +48,19 @@
 
 /* ── DARK MODE ── */
 body.dark {
-  --bg: #0f1f1a;
-  --s1: #161f1a;
-  --s2: #1c2b22;
-  --s3: #1a3a28;
-  --s4: #1f4530;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.13);
+  --bg: #0b0e18;
+  --s1: #12182a;
+  --s2: #0e1220;
+  --s3: #1a1f30;
+  --s4: #1f2540;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
   --text: #f5f0e8;
-  --sub: #5a7a68;
-  --dim: #3a5a48;
-  --accent: #34d399;
-  --accent-glow: rgba(52,211,153,0.15);
-  --accent-dim: rgba(52,211,153,0.07);
+  --sub: #6a7890;
+  --dim: #3a4868;
+  --accent: #1a4731;
+  --accent-glow: rgba(26,71,49,0.2);
+  --accent-dim: rgba(26,71,49,0.1);
   --navy: #1b2a4a;
   --green: #34d399;
   --green-glow: rgba(52,211,153,0.12);
@@ -71,11 +71,11 @@ body.dark {
   --gold-glow: rgba(200,150,26,0.15);
   --gold-dim: rgba(200,150,26,0.08);
   --mark-color: #f5f0e8;
-  --mark-eye: #0f1f1a;
-  --header-bg: rgba(15,31,26,0.92);
-  --nav-bg: rgba(22,31,26,0.95);
-  --nav-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
-  --card-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15);
+  --mark-eye: #0b0e18;
+  --header-bg: rgba(11,14,24,0.92);
+  --nav-bg: rgba(18,24,42,0.96);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -475,8 +475,8 @@ input::placeholder { color: var(--dim); }
   border-radius: var(--r-sm); padding: 12px 14px;
   position: relative; overflow: hidden;
 }
-.platform-row.best { border-color: var(--green); background: var(--green-glow); }
-.platform-row.worst { border-color: var(--red-glow); }
+.platform-row.best { border-color: rgba(52,211,153,0.25); background: rgba(15,30,20,0.6); }
+.platform-row.worst { border-color: rgba(248,113,113,0.15); }
 .platform-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .platform-fee { font-size: 10px; color: var(--dim); font-family: var(--mono); }
 .platform-profit { font-size: 18px; font-weight: 700; font-family: var(--mono); }
