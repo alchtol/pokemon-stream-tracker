@@ -955,8 +955,9 @@ Next stream coming soon. Follow so you never miss a drop 💪
   <!-- CENTERING TOOL -->
   <div class="card">
     <div class="card-hd">Centering analyzer</div>
-    <div class="info-tip">Upload a photo or use your camera to measure left/right and top/bottom centering ratios. PSA 10 requires 55/45 or better.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="info-tip">📸 Take a photo or upload, then drag the 4 ruler lines to each border edge. The app calculates your PSA centering grade automatically.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <button class="btn" onclick="document.getElementById('center-upload').click()" style="margin-bottom:0;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload photo
@@ -966,47 +967,28 @@ Next stream coming soon. Follow so you never miss a drop 💪
         Use camera
       </button>
     </div>
-    <input type="file" id="center-upload" accept="image/*" style="display:none" onchange="analyzeCenter(this)">
+    <input type="file" id="center-upload" accept="image/*" capture="environment" style="display:none" onchange="loadCenterPhoto(this)">
 
     <!-- Camera view -->
-    <div id="camera-wrap" style="display:none;margin-bottom:12px;position:relative">
-      <video id="camera-feed" style="width:100%;border-radius:var(--r-sm);background:#000" autoplay playsinline></video>
-      <button class="btn primary" onclick="capturePhoto()" style="margin-top:8px">📸 Capture</button>
-      <button class="btn" onclick="stopCamera()" style="margin-top:0;color:var(--red)">Cancel</button>
+    <div id="camera-wrap" style="display:none;margin-bottom:12px">
+      <video id="camera-feed" style="width:100%;border-radius:var(--r-sm);background:#000;display:block" autoplay playsinline></video>
       <canvas id="capture-canvas" style="display:none"></canvas>
-    </div>
-
-    <!-- Card preview with grid overlay -->
-    <div id="center-preview-wrap" style="display:none;margin-bottom:14px;position:relative">
-      <img id="center-img" style="width:100%;border-radius:var(--r-sm);display:block" alt="Card preview">
-      <!-- centering grid overlay -->
-      <div id="center-grid" style="position:absolute;inset:0;pointer-events:none">
-        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(200,150,26,0.6)"></div>
-        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(200,150,26,0.6)"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="capturePhoto()" style="margin-bottom:0">📸 Capture</button>
+        <button class="btn danger" onclick="stopCamera()" style="margin-bottom:0">Cancel</button>
       </div>
     </div>
 
-    <!-- Manual centering input -->
-    <div class="card-hd" style="margin-bottom:10px">Enter measurements manually</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Left border (mm)</div>
-        <input type="number" id="c-left" placeholder="e.g. 2.4" min="0" step="0.1" oninput="calcCentering()" style="margin-bottom:0">
+    <!-- Ruler overlay canvas -->
+    <div id="ruler-wrap" style="display:none;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        👆 Drag the <span style="color:#f87171;font-weight:600">red lines</span> to the left/right card borders &nbsp;·&nbsp; drag the <span style="color:#60a5fa;font-weight:600">blue lines</span> to the top/bottom borders
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Right border (mm)</div>
-        <input type="number" id="c-right" placeholder="e.g. 3.1" min="0" step="0.1" oninput="calcCentering()" style="margin-bottom:0">
+      <div style="position:relative;touch-action:none;user-select:none" id="ruler-container">
+        <canvas id="ruler-canvas" style="width:100%;display:block;border-radius:var(--r-sm);touch-action:none"></canvas>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Top border (mm)</div>
-        <input type="number" id="c-top" placeholder="e.g. 2.8" min="0" step="0.1" oninput="calcCentering()" style="margin-bottom:0">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Bottom border (mm)</div>
-        <input type="number" id="c-bottom" placeholder="e.g. 2.2" min="0" step="0.1" oninput="calcCentering()" style="margin-bottom:0">
-      </div>
+      <button class="btn primary" onclick="calcFromRulers()" style="margin-top:10px">Calculate centering</button>
+      <button class="btn" onclick="resetRulers()" style="margin-top:0;font-size:12px">Reset rulers</button>
     </div>
 
     <!-- Centering results -->
@@ -1021,11 +1003,12 @@ Next stream coming soon. Follow so you never miss a drop 💪
           <div class="met-v" id="cr-tb">—</div>
         </div>
       </div>
-      <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;text-align:center">
-        <div style="font-size:11px;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em">Centering grade</div>
-        <div style="font-size:28px;font-weight:700;font-family:var(--mono)" id="cr-grade">—</div>
-        <div style="font-size:12px;color:var(--sub);margin-top:4px" id="cr-note">—</div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:20px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em">Centering grade</div>
+        <div style="font-size:36px;font-weight:700;font-family:var(--mono)" id="cr-grade">—</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:6px" id="cr-note">—</div>
       </div>
+      <button class="btn" onclick="resetRulers()" style="margin-top:10px;font-size:12px">📸 Try another card</button>
     </div>
   </div>
 
@@ -1251,12 +1234,11 @@ function tab(id, btn) {
   window.scrollTo(0, 0);
 }
 
-// ── PLATFORM PRESETS ──
+// ── PLATFORM PRESETS — no local show ──
 const PLATFORMS = [
-  { id: 'whatnot', name: 'Whatnot', fee: 0.08, icon: '🎥' },
-  { id: 'tcgplayer', name: 'TCGPlayer', fee: 0.1075, icon: '🃏' },
-  { id: 'ebay', name: 'eBay', fee: 0.1335, icon: '🛒' },
-  { id: 'local', name: 'Local Show', fee: 0.00, icon: '🤝' },
+  { id: 'whatnot',   name: 'Whatnot',    fee: 0.08,   icon: '🎥' },
+  { id: 'tcgplayer', name: 'TCGPlayer',  fee: 0.1075, icon: '🃏' },
+  { id: 'ebay',      name: 'eBay',       fee: 0.1335, icon: '🛒' },
 ];
 
 // ── CALCULATOR ──
@@ -1788,42 +1770,267 @@ function cp(id) {
   navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => toast('Copied ✓'));
 }
 
-// ── CENTERING CALCULATOR ──
-function calcCentering() {
-  const l = parseFloat(document.getElementById('c-left').value);
-  const r = parseFloat(document.getElementById('c-right').value);
-  const t = parseFloat(document.getElementById('c-top').value);
-  const b = parseFloat(document.getElementById('c-bottom').value);
-  if (isNaN(l) || isNaN(r) || isNaN(t) || isNaN(b)) return;
+// ── INTERACTIVE RULER CENTERING SYSTEM ──
+let rulerImg = null;
+let rulers = { left: 0.25, right: 0.75, top: 0.25, bottom: 0.75 }; // as % of canvas
+let dragging = null;
+let canvasRect = null;
+let cameraStream = null;
 
-  document.getElementById('center-result').style.display = 'block';
+function loadCenterPhoto(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => initRulers(e.target.result);
+  reader.readAsDataURL(input.files[0]);
+}
 
-  const lrRatio = Math.max(l,r) / Math.min(l,r);
-  const tbRatio = Math.max(t,b) / Math.min(t,b);
-  const lrPct = Math.round((Math.min(l,r) / (l+r)) * 100);
-  const tbPct = Math.round((Math.min(t,b) / (t+b)) * 100);
-  const lrBig = 100 - lrPct;
-  const tbBig = 100 - tbPct;
+async function startCamera() {
+  document.getElementById('camera-wrap').style.display = 'block';
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    document.getElementById('camera-feed').srcObject = cameraStream;
+  } catch(e) {
+    toast('Camera access denied — use upload instead', 'err');
+    document.getElementById('camera-wrap').style.display = 'none';
+  }
+}
 
-  document.getElementById('cr-lr').textContent = lrPct + '/' + lrBig;
-  document.getElementById('cr-tb').textContent = tbPct + '/' + tbBig;
+function stopCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  document.getElementById('camera-wrap').style.display = 'none';
+}
 
-  // PSA grading: 10=55/45, 9=60/40, 8=65/35, lower=worse
-  let grade, note, color;
+function capturePhoto() {
+  const video = document.getElementById('camera-feed');
+  const canvas = document.getElementById('capture-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  stopCamera();
+  initRulers(canvas.toDataURL('image/jpeg', 0.9));
+}
+
+function initRulers(src) {
+  rulerImg = new Image();
+  rulerImg.onload = () => {
+    document.getElementById('ruler-wrap').style.display = 'block';
+    document.getElementById('center-result').style.display = 'none';
+    const canvas = document.getElementById('ruler-canvas');
+    const container = document.getElementById('ruler-container');
+    const displayW = container.offsetWidth;
+    const displayH = Math.round(displayW * rulerImg.height / rulerImg.width);
+    canvas.width = displayW;
+    canvas.height = displayH;
+    canvas.style.height = displayH + 'px';
+    // Default rulers at 20/80% — user drags to card edges
+    rulers = { left: 0.2, right: 0.8, top: 0.2, bottom: 0.8 };
+    drawRulers();
+    setupRulerDrag();
+    toast('Photo loaded — drag the lines to each card border');
+  };
+  rulerImg.src = src;
+}
+
+function drawRulers() {
+  const canvas = document.getElementById('ruler-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw photo
+  ctx.drawImage(rulerImg, 0, 0, W, H);
+
+  // Semi-transparent overlay outside card borders
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  // Left strip
+  ctx.fillRect(0, 0, rulers.left * W, H);
+  // Right strip
+  ctx.fillRect(rulers.right * W, 0, W - rulers.right * W, H);
+  // Top strip (between left and right)
+  ctx.fillRect(rulers.left * W, 0, (rulers.right - rulers.left) * W, rulers.top * H);
+  // Bottom strip
+  ctx.fillRect(rulers.left * W, rulers.bottom * H, (rulers.right - rulers.left) * W, H - rulers.bottom * H);
+
+  const drawLine = (x1, y1, x2, y2, color, label) => {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Handle circles for dragging
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    ctx.beginPath();
+    ctx.arc(mx, my, 16, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, mx, my);
+  };
+
+  // Left ruler — red vertical
+  drawLine(rulers.left * W, 0, rulers.left * W, H, '#f87171', 'L');
+  // Right ruler — red vertical
+  drawLine(rulers.right * W, 0, rulers.right * W, H, '#f87171', 'R');
+  // Top ruler — blue horizontal
+  drawLine(0, rulers.top * H, W, rulers.top * H, '#60a5fa', 'T');
+  // Bottom ruler — blue horizontal
+  drawLine(0, rulers.bottom * H, W, rulers.bottom * H, '#60a5fa', 'B');
+}
+
+function setupRulerDrag() {
+  const canvas = document.getElementById('ruler-canvas');
+  canvas.removeEventListener('mousedown', onDown);
+  canvas.removeEventListener('touchstart', onTouchStart);
+
+  function getPos(e) {
+    canvasRect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / canvasRect.width;
+    const scaleY = canvas.height / canvasRect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - canvasRect.left) * scaleX,
+      y: (clientY - canvasRect.top) * scaleY
+    };
+  }
+
+  function hitTest(pos) {
+    const W = canvas.width, H = canvas.height;
+    const THRESH = 24;
+    // Check vertical rulers (L, R) — distance from line
+    if (Math.abs(pos.x - rulers.left * W) < THRESH) return 'left';
+    if (Math.abs(pos.x - rulers.right * W) < THRESH) return 'right';
+    // Check horizontal rulers (T, B)
+    if (Math.abs(pos.y - rulers.top * H) < THRESH) return 'top';
+    if (Math.abs(pos.y - rulers.bottom * H) < THRESH) return 'bottom';
+    return null;
+  }
+
+  function onDown(e) {
+    const pos = getPos(e);
+    dragging = hitTest(pos);
+    if (dragging) { e.preventDefault(); canvas.style.cursor = 'grabbing'; }
+  }
+  function onTouchStart(e) {
+    const pos = getPos(e);
+    dragging = hitTest(pos);
+    if (dragging) e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    const W = canvas.width, H = canvas.height;
+    if (dragging === 'left')   rulers.left   = Math.min(Math.max(pos.x / W, 0.01), rulers.right - 0.05);
+    if (dragging === 'right')  rulers.right  = Math.max(Math.min(pos.x / W, 0.99), rulers.left  + 0.05);
+    if (dragging === 'top')    rulers.top    = Math.min(Math.max(pos.y / H, 0.01), rulers.bottom - 0.05);
+    if (dragging === 'bottom') rulers.bottom = Math.max(Math.min(pos.y / H, 0.99), rulers.top   + 0.05);
+    drawRulers();
+  }
+
+  function onUp() { dragging = null; canvas.style.cursor = 'default'; }
+
+  canvas.addEventListener('mousedown',  onDown,   { passive: false });
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('mousemove',  onMove,   { passive: false });
+  canvas.addEventListener('touchmove',  onMove,   { passive: false });
+  canvas.addEventListener('mouseup',    onUp);
+  canvas.addEventListener('touchend',   onUp);
+}
+
+function calcFromRulers() {
+  const canvas = document.getElementById('ruler-canvas');
+  const W = canvas.width, H = canvas.height;
+
+  const leftPx   = rulers.left   * W;
+  const rightPx  = rulers.right  * W;
+  const topPx    = rulers.top    * H;
+  const bottomPx = rulers.bottom * H;
+
+  // Card image borders (distance from card edge to ruler line)
+  // Left border = leftPx pixels from left of image
+  // Right border = (W - rightPx) pixels from right of image
+  // But we measure relative to the CARD ARTWORK area
+  // L/R centering = leftPx vs (W - rightPx)
+  // T/B centering = topPx vs (H - bottomPx)
+  const L = leftPx;
+  const R = W - rightPx;
+  const T = topPx;
+  const B = H - bottomPx;
+
+  const lrSmall = Math.min(L, R), lrBig = Math.max(L, R);
+  const tbSmall = Math.min(T, B), tbBig = Math.max(T, B);
+
+  const lrRatio = lrBig / lrSmall;
+  const tbRatio = tbBig / tbSmall;
+
+  const lrLeft  = Math.round((L / (L + R)) * 100);
+  const lrRight = 100 - lrLeft;
+  const tbTop   = Math.round((T / (T + B)) * 100);
+  const tbBot   = 100 - tbTop;
+
+  document.getElementById('cr-lr').textContent = lrLeft + '/' + lrRight;
+  document.getElementById('cr-tb').textContent = tbTop  + '/' + tbBot;
+
   const worst = Math.max(lrRatio, tbRatio);
-  if (worst <= 1.222) { grade = 'PSA 10'; note = 'Excellent — 55/45 or better'; color = 'var(--green)'; }
-  else if (worst <= 1.5) { grade = 'PSA 9'; note = 'Strong — 60/40 or better'; color = 'var(--green)'; }
-  else if (worst <= 1.857) { grade = 'PSA 8'; note = 'Good — 65/35 or better'; color = 'var(--amber)'; }
-  else if (worst <= 2.333) { grade = 'PSA 7'; note = 'Fair — 70/30 or better'; color = 'var(--amber)'; }
-  else { grade = 'PSA ≤6'; note = 'Poor centering'; color = 'var(--red)'; }
+  let grade, note, color;
+  if      (worst <= 1.222) { grade = 'PSA 10'; note = 'Gem Mint — 55/45 or better ✓';       color = 'var(--green)'; }
+  else if (worst <= 1.5)   { grade = 'PSA 9';  note = 'Mint — 60/40 or better';              color = 'var(--green)'; }
+  else if (worst <= 1.857) { grade = 'PSA 8';  note = 'Near Mint-Mint — 65/35 or better';   color = 'var(--amber)'; }
+  else if (worst <= 2.333) { grade = 'PSA 7';  note = 'Near Mint — 70/30 or better';         color = 'var(--amber)'; }
+  else                      { grade = 'PSA ≤6'; note = 'Poor centering — consider selling raw'; color = 'var(--red)'; }
 
   const gradeEl = document.getElementById('cr-grade');
   gradeEl.textContent = grade;
   gradeEl.style.color = color;
   document.getElementById('cr-note').textContent = note;
+  document.getElementById('center-result').style.display = 'block';
+  document.getElementById('center-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// ── CONDITION CHECKLIST ──
+function resetRulers() {
+  document.getElementById('ruler-wrap').style.display = 'none';
+  document.getElementById('center-result').style.display = 'none';
+  document.getElementById('center-upload').value = '';
+  rulerImg = null;
+  dragging = null;
+}
+
+// ── CENTERING CALCULATOR (manual fallback) ──
+function calcCentering() {
+  const l = parseFloat(document.getElementById('c-left')?.value);
+  const r = parseFloat(document.getElementById('c-right')?.value);
+  const t = parseFloat(document.getElementById('c-top')?.value);
+  const b = parseFloat(document.getElementById('c-bottom')?.value);
+  if (isNaN(l)||isNaN(r)||isNaN(t)||isNaN(b)) return;
+  document.getElementById('center-result').style.display = 'block';
+  const lrRatio = Math.max(l,r)/Math.min(l,r);
+  const tbRatio = Math.max(t,b)/Math.min(t,b);
+  const lrPct = Math.round((Math.min(l,r)/(l+r))*100);
+  const tbPct = Math.round((Math.min(t,b)/(t+b))*100);
+  document.getElementById('cr-lr').textContent = lrPct+'/'+(100-lrPct);
+  document.getElementById('cr-tb').textContent = tbPct+'/'+(100-tbPct);
+  const worst = Math.max(lrRatio, tbRatio);
+  let grade, note, color;
+  if      (worst<=1.222){grade='PSA 10';note='Gem Mint ✓';color='var(--green)';}
+  else if (worst<=1.5)  {grade='PSA 9'; note='Mint';color='var(--green)';}
+  else if (worst<=1.857){grade='PSA 8'; note='Near Mint-Mint';color='var(--amber)';}
+  else if (worst<=2.333){grade='PSA 7'; note='Near Mint';color='var(--amber)';}
+  else                  {grade='PSA ≤6';note='Poor centering';color='var(--red)';}
+  const gradeEl=document.getElementById('cr-grade');
+  gradeEl.textContent=grade; gradeEl.style.color=color;
+  document.getElementById('cr-note').textContent=note;
+}
 const condState = { corners: false, edges: false, surface: false, holo: false, whitening: false };
 
 function toggleCond(el, key) {
