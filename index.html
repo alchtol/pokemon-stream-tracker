@@ -556,8 +556,8 @@ input::placeholder { color: var(--dim); }
       <line x1="58" y1="0" x2="26" y2="54" stroke="var(--mark-color)" stroke-width="1.5"/>
     </svg>
     <div>
-      <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-0.02em;color:var(--text);line-height:1.1">White Toad</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:0.2em;line-height:1.2">TCG</div>
+      <div class="logo">White Toad<em> TCG</em></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:0.2em;line-height:1.2">TCG · v5.1</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -1432,29 +1432,11 @@ const EBAY_APP_ID = 'AllenTol-WhiteToa-PRD-2099fbd12-837359c2';
 
 async function fetchEbaySold(query) {
   try {
-    // Use eBay Finding API via allorigins proxy (no auth needed for finding API)
-    const ebayQuery = encodeURIComponent(query + ' pokemon card');
-    const findingUrl = `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findCompletedItems&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=${EBAY_APP_ID}&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords=${ebayQuery}&itemFilter(0).name=SoldItemsOnly&itemFilter(0).value=true&itemFilter(1).name=Category&itemFilter(1).value=2536&sortOrder=EndTimeSoonest&paginationInput.entriesPerPage=10`;
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(findingUrl);
-    const res = await fetch(proxyUrl);
+    const res = await fetch('/.netlify/functions/ebay?q=' + encodeURIComponent(query));
+    if (!res.ok) return null;
     const data = await res.json();
-    const parsed = JSON.parse(data.contents);
-    const items = parsed?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item || [];
-    if (!items.length) return null;
-    const prices = items
-      .map(i => parseFloat(i.sellingStatus?.[0]?.currentPrice?.[0]?.__value__ || 0))
-      .filter(p => p > 0)
-      .sort((a,b) => a-b);
-    if (!prices.length) return null;
-    const avg = prices.reduce((a,b) => a+b, 0) / prices.length;
-    const low = prices[0];
-    const high = prices[prices.length-1];
-    const recent = items.slice(0,5).map(i => ({
-      title: i.title?.[0] || '',
-      price: parseFloat(i.sellingStatus?.[0]?.currentPrice?.[0]?.__value__ || 0).toFixed(2),
-      date: i.listingInfo?.[0]?.endTime?.[0]?.split('T')[0] || ''
-    }));
-    return { avg: avg.toFixed(2), low: low.toFixed(2), high: high.toFixed(2), count: prices.length, recent };
+    if (!data.avg) return null;
+    return data;
   } catch(e) {
     return null;
   }
