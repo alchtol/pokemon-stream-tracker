@@ -642,7 +642,7 @@ input::placeholder { color: var(--dim); }
         <span class="ext-link-arrow">→</span>
       </a>
       <a id="ebay-link" class="ext-link" href="#" target="_blank">
-        <span class="ext-link-label">🛒 eBay</span>
+        <span class="ext-link-label">🛒 eBay Sold</span>
         <span class="ext-link-arrow">→</span>
       </a>
     </div>
@@ -653,24 +653,24 @@ input::placeholder { color: var(--dim); }
   <!-- eBay Summary -->
   <div id="ebay-summary" style="display:none">
     <div class="metrics" style="margin-bottom:12px">
-      <div class="met"><div class="met-l">Avg listed</div><div class="met-v" style="color:var(--gold)" id="eb-avg-bin">—</div></div>
-      <div class="met"><div class="met-l">Avg sold</div><div class="met-v g" id="eb-avg-sold">—</div></div>
-      <div class="met"><div class="met-l">Low listed</div><div class="met-v" id="eb-low-bin">—</div></div>
-      <div class="met"><div class="met-l">High sold</div><div class="met-v" id="eb-high-sold">—</div></div>
+      <div class="met"><div class="met-l">Avg BIN price</div><div class="met-v" style="color:var(--gold)" id="eb-avg-bin">—</div></div>
+      <div class="met"><div class="met-l">Avg auction</div><div class="met-v g" id="eb-avg-sold">—</div></div>
+      <div class="met"><div class="met-l">Lowest BIN</div><div class="met-v" id="eb-low-bin">—</div></div>
+      <div class="met"><div class="met-l">Highest auction</div><div class="met-v" id="eb-high-sold">—</div></div>
     </div>
 
     <!-- Buy It Now listings -->
     <div class="card">
-      <div class="card-hd">🛒 Buy it now — current listings</div>
+      <div class="card-hd">🛒 Buy it now — lowest price first</div>
       <div id="eb-bin-list"></div>
       <div id="eb-bin-empty" class="empty" style="padding:16px 0;display:none">No listings found</div>
     </div>
 
-    <!-- Sold listings -->
+    <!-- Ending soon auctions -->
     <div class="card">
-      <div class="card-hd">✅ Recently sold</div>
+      <div class="card-hd">⏱ Ending soon — active auctions</div>
       <div id="eb-sold-list"></div>
-      <div id="eb-sold-empty" class="empty" style="padding:16px 0;display:none">No sold listings found</div>
+      <div id="eb-sold-empty" class="empty" style="padding:16px 0;display:none">No auctions found</div>
     </div>
 
     <div style="font-size:10px;color:var(--dim);text-align:center;padding:4px 0 12px;font-family:var(--mono)">Live data from eBay · <span id="eb-timestamp"></span></div>
@@ -1340,7 +1340,7 @@ async function doSearch() {
   const encoded = encodeURIComponent(query);
 
   document.getElementById('tcg-link').href = 'https://www.tcgplayer.com/search/pokemon/product?q=' + encoded + '&view=grid';
-  document.getElementById('ebay-link').href = 'https://www.ebay.com/sch/i.html?_nkw=' + encoded + '+pokemon+card';
+  document.getElementById('ebay-link').href = 'https://www.ebay.com/sch/i.html?_nkw=' + encoded + '+pokemon+card&LH_Sold=1&LH_Complete=1';
   document.getElementById('tcg-link-wrap').style.display = 'block';
   document.getElementById('ebay-summary').style.display = 'none';
   document.getElementById('search-result').style.display = 'none';
@@ -2149,4 +2149,3 @@ init();
 </script>
 </body>
 </html>
-
