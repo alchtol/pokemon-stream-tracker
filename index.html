@@ -627,43 +627,13 @@ input::placeholder { color: var(--dim); }
 <div id="price" class="pane">
   <div class="page-hd">
     <div class="page-title">Prices</div>
-    <div class="page-sub">Search any Pokemon card</div>
+    <div class="page-sub">Live eBay data — sold + listings</div>
   </div>
   <div class="card">
-    <!-- Camera scan button -->
-    <button class="btn" onclick="startPriceScan()" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;border-color:var(--gold);color:var(--gold);font-weight:600">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Scan card with camera
-    </button>
-
-    <!-- Camera view for price scan -->
-    <div id="price-camera-wrap" style="display:none;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--sub);margin-bottom:8px;text-align:center">Point camera at the card — make sure the name and set are visible</div>
-      <video id="price-camera-feed" style="width:100%;border-radius:var(--r-sm);background:#000;display:block" autoplay playsinline></video>
-      <canvas id="price-capture-canvas" style="display:none"></canvas>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <button class="btn primary" onclick="capturePricePhoto()" style="margin-bottom:0">📸 Capture</button>
-        <button class="btn danger" onclick="stopPriceCamera()" style="margin-bottom:0">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Scan loading state -->
-    <div id="scan-loading" style="display:none;text-align:center;padding:16px 0;color:var(--sub);font-size:13px">
-      <div class="load-ring" style="margin:0 auto 10px"></div>
-      Reading card...
-    </div>
-
-    <!-- Divider -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:11px;color:var(--dim)">or search manually</span>
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-    </div>
-
     <input type="text" id="price-input" placeholder="Card name (e.g. Umbreon Illustration Rare)" />
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <input type="text" id="price-set" placeholder="Set (e.g. Paldean Fates)" style="margin-bottom:0"/>
-      <input type="text" id="price-num" placeholder="Card # (e.g. 193/193)" style="margin-bottom:0"/>
+      <input type="text" id="price-set" placeholder="Set (optional)" style="margin-bottom:0"/>
+      <input type="text" id="price-num" placeholder="Card # (optional)" style="margin-bottom:0"/>
     </div>
     <button class="btn primary" onclick="doSearch()">Search prices</button>
     <div id="tcg-link-wrap" style="display:none;margin-top:4px">
@@ -672,44 +642,44 @@ input::placeholder { color: var(--dim); }
         <span class="ext-link-arrow">→</span>
       </a>
       <a id="ebay-link" class="ext-link" href="#" target="_blank">
-        <span class="ext-link-label">🛒 eBay Sold</span>
+        <span class="ext-link-label">🛒 eBay</span>
         <span class="ext-link-arrow">→</span>
       </a>
     </div>
   </div>
-  <div id="ai-loading" class="loading-txt">Analyzing card data...</div>
-  <div id="search-result" class="search-result">
-    <div class="result-card-name" id="r-name"></div>
-    <div class="result-card-sub" id="r-sub"></div>
-    <div class="price-grid">
-      <div class="price-item"><div class="price-item-l">Near Mint</div><div class="price-item-v g" id="r-nm"></div></div>
-      <div class="price-item"><div class="price-item-l">Lightly Played</div><div class="price-item-v a" id="r-lp"></div></div>
-      <div class="price-item"><div class="price-item-l">Heavily Played</div><div class="price-item-v r" id="r-hp"></div></div>
-      <div class="price-item"><div class="price-item-l">PSA 9</div><div class="price-item-v" id="r-p9"></div></div>
-      <div class="price-item"><div class="price-item-l">PSA 10</div><div class="price-item-v g" id="r-p10"></div></div>
-      <div class="price-item"><div class="price-item-l">Trend</div><div class="price-item-v" id="r-trend"></div></div>
+
+  <div id="ai-loading" class="loading-txt">Fetching live eBay data...</div>
+
+  <!-- eBay Summary -->
+  <div id="ebay-summary" style="display:none">
+    <div class="metrics" style="margin-bottom:12px">
+      <div class="met"><div class="met-l">Avg listed</div><div class="met-v" style="color:var(--gold)" id="eb-avg-bin">—</div></div>
+      <div class="met"><div class="met-l">Avg sold</div><div class="met-v g" id="eb-avg-sold">—</div></div>
+      <div class="met"><div class="met-l">Low listed</div><div class="met-v" id="eb-low-bin">—</div></div>
+      <div class="met"><div class="met-l">High sold</div><div class="met-v" id="eb-high-sold">—</div></div>
     </div>
-    <div class="stream-notes" id="r-notes"></div>
-    <div class="buy-target">
-      <div class="buy-target-l">Suggested buy target</div>
-      <div class="buy-target-v" id="r-buy"></div>
+
+    <!-- Buy It Now listings -->
+    <div class="card">
+      <div class="card-hd">🛒 Buy it now — current listings</div>
+      <div id="eb-bin-list"></div>
+      <div id="eb-bin-empty" class="empty" style="padding:16px 0;display:none">No listings found</div>
     </div>
-    <div class="disclaimer" id="r-disclaimer"></div>
+
+    <!-- Sold listings -->
+    <div class="card">
+      <div class="card-hd">✅ Recently sold</div>
+      <div id="eb-sold-list"></div>
+      <div id="eb-sold-empty" class="empty" style="padding:16px 0;display:none">No sold listings found</div>
+    </div>
+
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:4px 0 12px;font-family:var(--mono)">Live data from eBay · <span id="eb-timestamp"></span></div>
   </div>
 
-  <!-- eBay sold listings section -->
-  <div id="ebay-sold-section" style="display:none;margin-bottom:14px">
-    <div class="card">
-      <div class="card-hd">🛒 eBay sold listings — live data</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-        <div class="met"><div class="met-l">Avg sold</div><div class="met-v g" id="eb-avg">—</div></div>
-        <div class="met"><div class="met-l">Low</div><div class="met-v" id="eb-low">—</div></div>
-        <div class="met"><div class="met-l">High</div><div class="met-v" id="eb-high">—</div></div>
-      </div>
-      <div class="card-hd" style="margin-bottom:8px">Recent sales</div>
-      <div id="eb-recent"></div>
-      <div style="font-size:10px;color:var(--dim);margin-top:10px;font-family:var(--mono)">Live data from eBay completed listings</div>
-    </div>
+  <div id="search-result" class="search-result" style="display:none">
+    <div class="result-card-name" id="r-name"></div>
+    <div class="result-card-sub" id="r-sub"></div>
+    <div class="disclaimer" id="r-disclaimer"></div>
   </div>
 </div>
 
@@ -1360,89 +1330,6 @@ function updateMarginHint() {
 }
 
 // ── PRICE LOOKUP ──
-// ── PRICE CAMERA SCAN ──
-let priceCameraStream = null;
-
-async function startPriceScan() {
-  document.getElementById('price-camera-wrap').style.display = 'block';
-  try {
-    priceCameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
-    });
-    document.getElementById('price-camera-feed').srcObject = priceCameraStream;
-  } catch(e) {
-    toast('Camera access denied', 'err');
-    document.getElementById('price-camera-wrap').style.display = 'none';
-  }
-}
-
-function stopPriceCamera() {
-  if (priceCameraStream) { priceCameraStream.getTracks().forEach(t => t.stop()); priceCameraStream = null; }
-  document.getElementById('price-camera-wrap').style.display = 'none';
-}
-
-async function capturePricePhoto() {
-  const video = document.getElementById('price-camera-feed');
-  const canvas = document.getElementById('price-capture-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  stopPriceCamera();
-
-  const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-  document.getElementById('scan-loading').style.display = 'block';
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        system: 'You are a Pokemon TCG card identification expert. Look at the card image and extract the card name, set name, and card number. Respond ONLY with valid JSON, no markdown: {"name":"card name","set":"set name","number":"card number or empty string if not visible"}',
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-            { type: 'text', text: 'What Pokemon card is this? Extract the name, set, and number.' }
-          ]
-        }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content.map(i => i.text || '').join('');
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-
-    // Auto-fill the search fields
-    document.getElementById('price-input').value = parsed.name || '';
-    document.getElementById('price-set').value = parsed.set || '';
-    document.getElementById('price-num').value = parsed.number || '';
-    document.getElementById('scan-loading').style.display = 'none';
-
-    toast('Card identified — running price lookup...');
-    doSearch();
-  } catch(e) {
-    document.getElementById('scan-loading').style.display = 'none';
-    toast('Could not read card — try manually', 'err');
-  }
-}
-
-// ── EBAY CONFIG ──
-const EBAY_APP_ID = 'AllenTol-WhiteToa-PRD-2099fbd12-837359c2';
-
-async function fetchEbaySold(query) {
-  try {
-    const res = await fetch('/api/ebay?q=' + encodeURIComponent(query));
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.avg) return null;
-    return data;
-  } catch(e) {
-    return null;
-  }
-}
-
-// ── PRICE LOOKUP ──
 async function doSearch() {
   const card = document.getElementById('price-input').value.trim();
   const set = document.getElementById('price-set').value.trim();
@@ -1453,61 +1340,64 @@ async function doSearch() {
   const encoded = encodeURIComponent(query);
 
   document.getElementById('tcg-link').href = 'https://www.tcgplayer.com/search/pokemon/product?q=' + encoded + '&view=grid';
-  document.getElementById('ebay-link').href = 'https://www.ebay.com/sch/i.html?_nkw=' + encoded + '+pokemon+card&LH_Sold=1&LH_Complete=1';
+  document.getElementById('ebay-link').href = 'https://www.ebay.com/sch/i.html?_nkw=' + encoded + '+pokemon+card';
   document.getElementById('tcg-link-wrap').style.display = 'block';
+  document.getElementById('ebay-summary').style.display = 'none';
   document.getElementById('search-result').style.display = 'none';
   document.getElementById('ai-loading').style.display = 'block';
-  document.getElementById('ai-loading').textContent = 'Fetching live eBay data + AI analysis...';
+  document.getElementById('ai-loading').textContent = 'Fetching live eBay data...';
 
-  // Run eBay and AI in parallel
-  const [ebayData, aiResult] = await Promise.allSettled([
-    fetchEbaySold(query),
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are a Pokemon TCG pricing expert for a reseller and Whatnot live stream seller. Given a card name, set, and/or card number, provide accurate market pricing. Respond ONLY with valid JSON, no markdown, no backticks. Format: {"card":"full card name","set":"set name","number":"card number if known","type":"card type e.g. Illustration Rare","nm":"$X-$X","lp":"$X-$X","hp":"$X-$X","psa9":"$X-$X","psa10":"$X-$X","trend":"Rising/Stable/Falling","trend_reason":"1 sentence on why","stream_notes":"2 sentences on live stream auction performance and demand","buy_target":"$X","margin_note":"suggested margin % to target","disclaimer":"AI estimate — verify on TCGPlayer/eBay"}`,
-        messages: [{ role: 'user', content: `Price data for: ${card}${set ? ', Set: '+set : ''}${num ? ', Number: '+num : ''}` }]
-      })
-    }).then(r => r.json()).then(d => JSON.parse(d.content.map(i => i.text||'').join('').replace(/```json|```/g,'').trim()))
-  ]);
+  try {
+    const [binRes, soldRes] = await Promise.all([
+      fetch('/api/ebay?q=' + encodeURIComponent(query) + '&type=bin'),
+      fetch('/api/ebay?q=' + encodeURIComponent(query) + '&type=sold')
+    ]);
+    const binData = binRes.ok ? await binRes.json() : null;
+    const soldData = soldRes.ok ? await soldRes.json() : null;
 
-  document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ebay-summary').style.display = 'block';
 
-  const ebay = ebayData.status === 'fulfilled' ? ebayData.value : null;
-  const ai = aiResult.status === 'fulfilled' ? aiResult.value : null;
+    document.getElementById('eb-avg-bin').textContent = binData?.avg ? '$' + binData.avg : '—';
+    document.getElementById('eb-avg-sold').textContent = soldData?.avg ? '$' + soldData.avg : '—';
+    document.getElementById('eb-low-bin').textContent = binData?.low ? '$' + binData.low : '—';
+    document.getElementById('eb-high-sold').textContent = soldData?.high ? '$' + soldData.high : '—';
+    document.getElementById('eb-timestamp').textContent = new Date().toLocaleTimeString();
 
-  if (!ai && !ebay) {
+    renderEbayList('eb-bin-list', 'eb-bin-empty', binData?.recent || []);
+    renderEbayList('eb-sold-list', 'eb-sold-empty', soldData?.recent || []);
+
+  } catch(e) {
+    document.getElementById('ai-loading').style.display = 'none';
     document.getElementById('search-result').style.display = 'block';
-    document.getElementById('r-name').textContent = 'Could not fetch data';
-    document.getElementById('r-sub').textContent = 'Use the links above for live pricing';
-    ['r-nm','r-lp','r-hp','r-p9','r-p10','r-trend','r-buy'].forEach(id => document.getElementById(id).textContent = '--');
-    document.getElementById('r-notes').textContent = '';
+    document.getElementById('r-name').textContent = 'Could not fetch eBay data';
+    document.getElementById('r-sub').textContent = 'Use the links above to search manually';
     document.getElementById('r-disclaimer').textContent = '';
-    document.getElementById('ebay-sold-section').style.display = 'none';
-    return;
   }
+}
 
-  if (ai) renderResult(ai);
-  if (ebay) renderEbaySold(ebay);
-  else document.getElementById('ebay-sold-section').style.display = 'none';
+function renderEbayList(listId, emptyId, items) {
+  const list = document.getElementById(listId);
+  const empty = document.getElementById(emptyId);
+  list.innerHTML = '';
+  if (!items.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 0;${i < items.length-1 ? 'border-bottom:1px solid var(--border)' : ''}`;
+    row.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">${item.condition || ''}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:right">
+        <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--green)">$${item.price}</div>
+        ${item.url ? `<a href="${item.url}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none">View →</a>` : ''}
+      </div>`;
+    list.appendChild(row);
+  });
 }
-function renderResult(d) {
-  document.getElementById('search-result').style.display = 'block';
-  document.getElementById('r-name').textContent = d.card;
-  document.getElementById('r-sub').textContent = [d.set, d.number, d.type].filter(Boolean).join(' · ');
-  document.getElementById('r-nm').textContent = d.nm;
-  document.getElementById('r-lp').textContent = d.lp;
-  document.getElementById('r-hp').textContent = d.hp;
-  document.getElementById('r-p9').textContent = d.psa9;
-  document.getElementById('r-p10').textContent = d.psa10;
-  document.getElementById('r-trend').textContent = d.trend + (d.trend_reason ? ' — ' + d.trend_reason : '');
-  document.getElementById('r-notes').textContent = d.stream_notes;
-  document.getElementById('r-buy').textContent = d.buy_target;
-  document.getElementById('r-disclaimer').textContent = d.disclaimer;
-}
+
 
 function renderEbaySold(data) {
   document.getElementById('ebay-sold-section').style.display = 'block';
