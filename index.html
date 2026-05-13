@@ -1432,7 +1432,7 @@ const EBAY_APP_ID = 'AllenTol-WhiteToa-PRD-2099fbd12-837359c2';
 
 async function fetchEbaySold(query) {
   try {
-    const res = await fetch('/.netlify/functions/ebay?q=' + encodeURIComponent(query));
+    const res = await fetch('/api/ebay?q=' + encodeURIComponent(query));
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.avg) return null;
