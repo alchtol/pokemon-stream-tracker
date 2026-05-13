@@ -621,6 +621,14 @@ input::placeholder { color: var(--dim); }
       <div class="proj-item"><div class="proj-freq">8× / mo</div><div class="proj-val g" id="p8">—</div></div>
     </div>
   </div>
+
+  <div class="card" id="calc-log-card" style="display:none">
+    <div class="card-hd">Log this sale</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:12px" id="calc-log-summary">—</div>
+    <input type="text" id="calc-log-name" placeholder="Card name (optional)" style="margin-bottom:8px"/>
+    <input type="text" id="calc-log-notes" placeholder="Notes (optional)" style="margin-bottom:10px"/>
+    <button class="btn primary" onclick="logFromCalc()">Add to stream log</button>
+  </div>
 </div>
 
 <!-- ═══ PRICE LOOKUP ═══ -->
@@ -673,7 +681,8 @@ input::placeholder { color: var(--dim); }
       <div id="eb-sold-empty" class="empty" style="padding:16px 0;display:none">No auctions found</div>
     </div>
 
-    <div style="font-size:10px;color:var(--dim);text-align:center;padding:4px 0 12px;font-family:var(--mono)">Live data from eBay · <span id="eb-timestamp"></span></div>
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:4px 0 8px;font-family:var(--mono)">Live data from eBay · <span id="eb-timestamp"></span></div>
+    <button class="btn primary" id="add-to-portfolio-btn" style="display:none" onclick="addSearchToPortfolio()">+ Add to portfolio</button>
   </div>
 
   <div id="search-result" class="search-result" style="display:none">
@@ -683,28 +692,55 @@ input::placeholder { color: var(--dim); }
   </div>
 </div>
 
-<!-- ═══ INVENTORY ═══ -->
-<div id="inv" class="pane">
+<!-- ═══ PORTFOLIO ═══ -->
+<div id="inv" class="pane on">
   <div class="page-hd">
-    <div class="page-title">Inventory</div>
-    <div class="page-sub">Plan your next stream</div>
+    <div class="page-title">Portfolio</div>
+    <div class="page-sub">Your TCG positions</div>
   </div>
 
-  <!-- ADD CARD first -->
-  <div class="card">
-    <div class="card-hd">Add card</div>
-    <input type="text" id="inv-name" placeholder="Card name" />
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <input type="number" id="inv-cost" placeholder="Cost $" min="0" step="0.50" style="margin-bottom:0" />
-      <input type="number" id="inv-mkt" placeholder="Market $" min="0" step="0.50" style="margin-bottom:0" />
+  <!-- HERO — total portfolio value like Fidelity account value -->
+  <div class="hero-met" id="portfolio-hero" style="margin-bottom:14px">
+    <div class="hero-met-l">Portfolio value</div>
+    <div class="hero-met-v" id="port-value" style="color:var(--gold)">$0.00</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Invested</div>
+        <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--red)" id="port-cost">$0</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Unrealized P&L</div>
+        <div style="font-size:16px;font-weight:700;font-family:var(--mono)" id="port-pnl">$0</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">ROI</div>
+        <div style="font-size:16px;font-weight:700;font-family:var(--mono)" id="port-roi">0%</div>
+      </div>
     </div>
-    <div style="height:10px"></div>
-    <button class="btn primary" onclick="addCard()">Add to inventory</button>
+    <div class="margin-bar-wrap" style="margin-top:14px"><div class="margin-bar-fill" id="port-bar" style="width:0%;background:var(--amber)"></div></div>
   </div>
 
-  <!-- MARGIN TARGET after add -->
+  <!-- POSITIONS LIST -->
+  <div id="positions-wrap">
+    <div class="card" id="inv-card" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="card-hd" style="margin-bottom:0">Positions <span style="font-size:11px;color:var(--dim);font-family:var(--mono)" id="pos-count"></span></div>
+        <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">swipe ← to remove</div>
+      </div>
+      <div id="inv-list"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="portfolio-empty" class="card" style="text-align:center;padding:32px 20px">
+      <div style="font-size:32px;margin-bottom:12px">📦</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No positions yet</div>
+      <div style="font-size:12px;color:var(--sub)">Search a card in Prices and add it to your portfolio, or add manually below</div>
+    </div>
+  </div>
+
+  <!-- MARGIN TARGET -->
   <div class="card">
-    <div class="card-hd">Margin target</div>
+    <div class="card-hd">Target margin</div>
     <div class="sync-input-row" style="margin-bottom:0">
       <div class="sync-input-top">
         <span class="slider-label">Profit margin %</span>
@@ -715,41 +751,22 @@ input::placeholder { color: var(--dim); }
     <div class="hint-txt" id="mg-hint">At 100% — sell a $10 card for ~$10.87 after fees</div>
   </div>
 
-  <!-- STREAM SNAPSHOT — clean, no donut -->
-  <div class="inv-chart-card" id="inv-chart">
-    <div class="inv-chart-title">Stream snapshot</div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
-      <div class="met"><div class="met-l">Cards</div><div class="met-v b" id="im-count">0</div></div>
-      <div class="met"><div class="met-l">Total cost</div><div class="met-v r" id="im-cost">$0</div></div>
-      <div class="met"><div class="met-l">Market value</div><div class="met-v" style="color:var(--gold)" id="chart-mkt">$0</div></div>
-      <div class="met"><div class="met-l">Potential profit</div><div class="met-v g" id="chart-profit">$0</div></div>
-    </div>
-    <div class="inv-chart-bars">
-      <div class="inv-chart-row">
-        <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Value gain</span>
-          <span class="inv-chart-row-val" id="chart-ratio">—</span>
-        </div>
-        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill cost" id="chart-bar-cost" style="width:0%"></div></div>
+  <!-- ADD POSITION — at the bottom like a buy form -->
+  <div class="card">
+    <div class="card-hd">Add position</div>
+    <input type="text" id="inv-name" placeholder="Card name" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Cost basis $</div>
+        <input type="number" id="inv-cost" placeholder="What you paid" min="0" step="0.50" style="margin-bottom:0" />
       </div>
-      <div class="inv-chart-row">
-        <div class="inv-chart-row-top">
-          <span class="inv-chart-row-label">Goal to hit</span>
-          <span class="inv-chart-row-val a" id="chart-bar-tgt-val">$0</span>
-        </div>
-        <div class="inv-chart-bar-track"><div class="inv-chart-bar-fill target" id="chart-bar-tgt" style="width:0%"></div></div>
+      <div>
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Market value $</div>
+        <input type="number" id="inv-mkt" placeholder="Current price" min="0" step="0.50" style="margin-bottom:0" />
       </div>
     </div>
-  </div>
-
-  <!-- CARD LIST -->
-  <div class="card" id="inv-card" style="display:none">
-    <div class="card-hd">Stream cards</div>
-    <div class="inv-col-hd">
-      <span class="ch-name">Card · Cost · Market · Target · Profit</span>
-    </div>
-    <div class="swipe-hint">← swipe left to remove</div>
-    <div id="inv-list"></div>
+    <div style="height:10px"></div>
+    <button class="btn primary" onclick="addCard()">Add to portfolio</button>
   </div>
 </div>
 
@@ -1161,9 +1178,9 @@ Next stream coming soon. Follow so you never miss a drop 💪
 
 <!-- ═══ NAV ═══ -->
 <nav class="nav">
-  <button class="nav-btn on" onclick="tab('calc',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
-    Calc
+  <button class="nav-btn on" onclick="tab('inv',this)">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+    Portfolio
   </button>
   <button class="nav-btn" onclick="tab('price',this)">
     <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
@@ -1173,9 +1190,9 @@ Next stream coming soon. Follow so you never miss a drop 💪
     <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
     Grade
   </button>
-  <button class="nav-btn" onclick="tab('inv',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
-    Inventory
+  <button class="nav-btn" onclick="tab('calc',this)">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
+    Calc
   </button>
   <button class="nav-btn" onclick="tab('more',this)">
     <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg></span>
@@ -1306,6 +1323,11 @@ function calc() {
     el.textContent = (v >= 0 ? '+$' : '−$') + Math.abs(v);
     el.className = 'proj-val ' + (v >= 0 ? 'g' : 'r');
   });
+
+  // Show log card when there's a real profit to log
+  if (best.profit !== 0) {
+    showCalcLog(best.profit, cost, sale, best.name);
+  }
 }
 
 // ── INVENTORY MARGIN ──
@@ -1363,6 +1385,9 @@ async function doSearch() {
     document.getElementById('eb-low-bin').textContent = binData?.low ? '$' + binData.low : '—';
     document.getElementById('eb-high-sold').textContent = soldData?.high ? '$' + soldData.high : '—';
     document.getElementById('eb-timestamp').textContent = new Date().toLocaleTimeString();
+    document.getElementById('add-to-portfolio-btn').style.display = 'block';
+    document.getElementById('add-to-portfolio-btn').dataset.name = card;
+    document.getElementById('add-to-portfolio-btn').dataset.price = binData?.avg || '';
 
     renderEbayList('eb-bin-list', 'eb-bin-empty', binData?.recent || []);
     renderEbayList('eb-sold-list', 'eb-sold-empty', soldData?.recent || []);
@@ -1529,101 +1554,82 @@ document.addEventListener('mousedown', e => {
 function renderCards() {
   const list = document.getElementById('inv-list');
   const invCard = document.getElementById('inv-card');
-  const chart = document.getElementById('inv-chart');
+  const empty = document.getElementById('portfolio-empty');
   list.innerHTML = '';
+
   if (!cards.length) {
     invCard.style.display = 'none';
-    chart.style.display = 'none';
+    empty.style.display = 'block';
+    document.getElementById('port-value').textContent = '$0.00';
+    document.getElementById('port-cost').textContent = '$0';
+    document.getElementById('port-pnl').textContent = '$0';
+    document.getElementById('port-roi').textContent = '0%';
+    document.getElementById('port-bar').style.width = '0%';
     return;
   }
+
   invCard.style.display = 'block';
-  chart.style.display = 'block';
+  empty.style.display = 'none';
 
   const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
   const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
+  const pnl = tm - tc;
+  const roi = tc > 0 ? Math.round((pnl / tc) * 100) : 0;
+
+  // Portfolio hero
+  document.getElementById('port-value').textContent = '$' + tm.toFixed(2);
+  document.getElementById('port-cost').textContent = '$' + tc.toFixed(2);
+  const pnlEl = document.getElementById('port-pnl');
+  pnlEl.textContent = (pnl >= 0 ? '+$' : '−$') + Math.abs(pnl).toFixed(2);
+  pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const roiEl = document.getElementById('port-roi');
+  roiEl.textContent = (roi >= 0 ? '+' : '') + roi + '%';
+  roiEl.style.color = roi >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const barPct = Math.min(Math.max(roi, 0), 150) / 150 * 100;
+  const bar = document.getElementById('port-bar');
+  bar.style.width = barPct + '%';
+  bar.style.background = roi >= 100 ? 'var(--green)' : roi >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  document.getElementById('pos-count').textContent = '(' + cards.length + ')';
+
   const marginPct = getMarginTarget();
-  const tt = cards.reduce((a,c) => a + calcTargetSale(Number(c.cost), marginPct), 0);
-  const tp = tm - tc;
-  const hasMarket = tm > 0;
 
-  document.getElementById('im-count').textContent = cards.length;
-  document.getElementById('im-cost').textContent = '$' + tc.toFixed(2);
-  document.getElementById('chart-mkt').textContent = hasMarket ? '$' + tm.toFixed(2) : '--';
-  document.getElementById('chart-profit').textContent = hasMarket ? (tp >= 0 ? '+$' : '−$') + Math.abs(tp).toFixed(2) : '--';
-  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '%' : '—';
-  document.getElementById('chart-bar-tgt-val').textContent = '$' + tt.toFixed(2);
+  cards.forEach(card => {
+    const cost = Number(card.cost);
+    const mkt = Number(card.market_value) || 0;
+    const target = calcTargetSale(cost, marginPct);
+    const gain = mkt - cost;
+    const gainPct = cost > 0 ? Math.round((gain / cost) * 100) : 0;
+    const gainColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
 
-  const max = Math.max(tc, tm, tt, 1);
-  document.getElementById('chart-bar-cost').style.width = (tc / max * 100).toFixed(1) + '%';
-  document.getElementById('chart-bar-tgt').style.width = (tt / max * 100).toFixed(1) + '%';
-
-  cards.forEach(c => {
-    const targetSale = calcTargetSale(Number(c.cost), marginPct);
-    const mkt = Number(c.market_value) || 0;
-    const potProfit = mkt - Number(c.cost);
-    const profitCls = mkt > 0 ? (potProfit > 0 ? 'profit-pos' : 'profit-neg') : 'profit-nil';
-    const profitStr = mkt > 0 ? (potProfit >= 0 ? '+$' : '−$') + Math.abs(potProfit).toFixed(2) : '--';
-
-    const wrap = document.createElement('div');
-    wrap.className = 'inv-row-wrap';
-    wrap.id = 'wrap-' + c.id;
-
-    // profit bar: show % of cost recovered by market value, capped at 200%
-    const barPct = mkt > 0 ? Math.min((mkt / Number(c.cost)) * 100, 200) : 0;
-    const barColor = barPct >= 150 ? 'var(--green)' : barPct >= 100 ? 'var(--blue)' : barPct > 0 ? 'var(--amber)' : 'var(--dim)';
-    const barLabel = mkt > 0 ? `${Math.round(barPct)}% of cost recovered` : 'No market value set';
-
-    wrap.innerHTML = `
-      <div class="inv-swipe-actions">
-        <button class="inv-swipe-btn remove" onclick="removeCard('${c.id}')">Remove</button>
-      </div>
-      <div class="inv-row" id="row-${c.id}">
-        <div class="inv-row-name">${c.card_name}</div>
-        <div class="inv-row-data">
-          <div class="inv-chip">
-            <span class="inv-chip-l">Cost</span>
-            <span class="inv-chip-v cost">$${Number(c.cost).toFixed(2)}</span>
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    row.dataset.id = card.id;
+    row.innerHTML = `
+      <div class="inv-row-inner">
+        <div class="inv-row-content">
+          <div class="inv-row-name">${card.card_name}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <span class="chip chip-red">Cost $${cost.toFixed(2)}</span>
+            ${mkt > 0 ? `<span class="chip chip-gold">Mkt $${mkt.toFixed(2)}</span>` : ''}
+            <span class="chip chip-amber">Target $${target.toFixed(2)}</span>
+            ${mkt > 0 ? `<span class="chip" style="background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};color:${gainColor};border-color:${gainColor}20">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)} (${gainPct}%)</span>` : ''}
           </div>
-          <div class="inv-chip">
-            <span class="inv-chip-l">Market</span>
-            <span class="inv-chip-v mkt">${mkt > 0 ? '$' + mkt.toFixed(2) : '--'}</span>
-          </div>
-          <div class="inv-chip">
-            <span class="inv-chip-l">Target</span>
-            <span class="inv-chip-v target">$${targetSale.toFixed(2)}</span>
-          </div>
-          <div class="inv-chip">
-            <span class="inv-chip-l">Profit</span>
-            <span class="inv-chip-v ${profitCls}">${profitStr}</span>
-          </div>
+          ${mkt > 0 ? `
+          <div style="margin-top:8px">
+            <div style="height:3px;background:var(--s3);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${gain >= 0 ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
+            </div>
+          </div>` : ''}
         </div>
-        <div class="inv-profit-bar-wrap">
-          <div class="inv-profit-bar" style="width:${barPct.toFixed(1)}%;background:${barColor}"></div>
+        <div class="inv-row-actions">
+          <button class="swipe-del" onclick="removeCard('${card.id}')">Remove</button>
         </div>
-        <div class="inv-profit-bar-label">${barLabel}</div>
       </div>`;
-    list.appendChild(wrap);
-    addSwipe(c.id);
+    list.appendChild(row);
+    setupSwipe(row);
   });
-  renderChart(cards, marginPct);
-}
-
-function renderChart(cards, marginPct) {
-  const chart = document.getElementById('inv-chart');
-  if (!cards.length) { chart.style.display = 'none'; return; }
-  chart.style.display = 'block';
-
-  const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
-  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
-  const tt = cards.reduce((a,c) => a + calcTargetSale(Number(c.cost), marginPct), 0);
-  const tp = tm - tc;
-  const hasMarket = tm > 0;
-
-  document.getElementById('chart-ratio').textContent = hasMarket ? (tm / tc * 100).toFixed(0) + '%' : '—';
-  document.getElementById('chart-bar-tgt-val').textContent = '$' + tt.toFixed(2);
-  const max = Math.max(tc, tm, tt, 1);
-  document.getElementById('chart-bar-cost').style.width = (tc / max * 100).toFixed(1) + '%';
-  document.getElementById('chart-bar-tgt').style.width = (tt / max * 100).toFixed(1) + '%';
 }
 let streams = [];
 async function loadStreams() {
@@ -2112,6 +2118,59 @@ function analyzeCenter(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
+// ── ADD TO PORTFOLIO FROM PRICES ──
+function addSearchToPortfolio() {
+  const btn = document.getElementById('add-to-portfolio-btn');
+  const name = btn.dataset.name || '';
+  const price = btn.dataset.price || '';
+  document.getElementById('inv-name').value = name;
+  document.getElementById('inv-mkt').value = price;
+  document.getElementById('inv-cost').value = '';
+  // Switch to portfolio tab
+  tab('inv', document.querySelector('.nav-btn'));
+  setTimeout(() => {
+    document.getElementById('inv-cost').focus();
+    toast('Fill in your cost basis and add to portfolio');
+  }, 300);
+}
+
+// ── LOG FROM CALCULATOR ──
+let calcLogData = null;
+
+function showCalcLog(profit, cost, sale, platform) {
+  calcLogData = { profit, cost, sale, platform };
+  document.getElementById('calc-log-card').style.display = 'block';
+  document.getElementById('calc-log-summary').textContent =
+    `${platform} · Cost $${cost} · Sale $${sale} · Profit ${profit >= 0 ? '+$' : '−$'}${Math.abs(profit)}`;
+}
+
+async function logFromCalc() {
+  if (!calcLogData) return;
+  const name = document.getElementById('calc-log-name').value.trim() || 'Calculator sale';
+  const notes = document.getElementById('calc-log-notes').value.trim();
+  const { profit, cost, sale, platform } = calcLogData;
+  const revenue = sale;
+  const margin = cost > 0 ? Math.round((profit / cost) * 100) : 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    const { data, error } = await supabase
+      .from('stream_log')
+      .insert([{ date: today, buy_in: cost, revenue, profit, margin, notes: `${name}${notes ? ' — ' + notes : ''} (${platform})` }])
+      .select();
+    if (error) throw error;
+    streams.unshift(data[0]);
+    renderStreams();
+    toast('Logged to stream log ✓');
+    document.getElementById('calc-log-card').style.display = 'none';
+    document.getElementById('calc-log-name').value = '';
+    document.getElementById('calc-log-notes').value = '';
+    calcLogData = null;
+  } catch(e) {
+    toast('Could not save — try again', 'err');
+  }
+}
+
 // ── THEME TOGGLE ──
 function toggleTheme() {
   const isDark = document.body.classList.toggle('dark');
@@ -2136,6 +2195,9 @@ function applyTheme() {
 async function init() {
   applyTheme();
   calc(); updateMarginHint();
+  // Start on portfolio tab
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.getElementById('inv').classList.add('on');
   try {
     await Promise.all([loadCards(), loadStreams()]);
     setSync('live');
