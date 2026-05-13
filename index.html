@@ -2154,7 +2154,7 @@ async function logFromCalc() {
   const today = new Date().toISOString().split('T')[0];
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('stream_log')
       .insert([{ date: today, buy_in: cost, revenue, profit, margin, notes: `${name}${notes ? ' — ' + notes : ''} (${platform})` }])
       .select();
