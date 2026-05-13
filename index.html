@@ -570,7 +570,7 @@ input::placeholder { color: var(--dim); }
 </div>
 
 <!-- ═══ CALCULATOR ═══ -->
-<div id="calc" class="pane on">
+<div id="calc" class="pane">
   <div class="page-hd">
     <div class="page-title">Calculator</div>
     <div class="page-sub">Compare platforms side by side</div>
@@ -2195,9 +2195,6 @@ function applyTheme() {
 async function init() {
   applyTheme();
   calc(); updateMarginHint();
-  // Start on portfolio tab
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.getElementById('inv').classList.add('on');
   try {
     await Promise.all([loadCards(), loadStreams()]);
     setSync('live');
