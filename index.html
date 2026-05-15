@@ -562,10 +562,6 @@ input::placeholder { color: var(--dim); }
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark mode">🌙</button>
-    <div class="sync-pill">
-      <div class="sync-dot" id="sync-dot" style="display:none"></div>
-      <span id="sync-label" style="display:none">Connecting</span>
-    </div>
   </div>
 </div>
 
@@ -1213,19 +1209,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 // ── SYNC ──
-function setSync(state) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  if (state === 'saving') {
-    dot.style.display = 'block';
-    label.style.display = 'inline';
-    dot.className = 'sync-dot saving';
-    label.textContent = 'Saving';
-  } else {
-    dot.style.display = 'none';
-    label.style.display = 'none';
-  }
-}
+function setSync(state) { /* removed */ }
 
 // ── TOAST ──
 function toast(msg, type = 'ok') {
@@ -2274,24 +2258,11 @@ async function init() {
   applyTheme();
   calc(); updateMarginHint();
   document.getElementById('loading-overlay').classList.add('hidden');
-
-  // Try to connect with retries
-  let attempts = 0;
-  const connect = async () => {
-    attempts++;
-    try {
-      await Promise.all([loadCards(), loadStreams()]);
-      setSync('live');
-    } catch(e) {
-      if (attempts < 3) {
-        setTimeout(connect, 2000 * attempts);
-      } else {
-        setSync('');
-        toast('Connection issue — data may not save', 'err');
-      }
-    }
-  };
-  connect();
+  try {
+    await Promise.all([loadCards(), loadStreams()]);
+  } catch(e) {
+    // Silent fail — data loads from cache
+  }
 }
 init();
 </script>
