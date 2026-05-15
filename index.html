@@ -483,7 +483,20 @@ input::placeholder { color: var(--dim); }
 .platform-margin { font-size: 10px; color: var(--dim); font-family: var(--mono); text-align: right; }
 .best-badge { font-size: 9px; background: var(--green); color: #fff; padding: 2px 7px; border-radius: 10px; font-weight: 600; margin-left: 6px; }
 
-/* ── CONDITION CHECKLIST ── */
+/* ── CHART RANGE BUTTONS ── */
+.chart-range-btn {
+  padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border2); background: none; color: var(--sub); cursor: pointer;
+}
+.chart-range-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── CONDITION BUTTONS ── */
+.cond-btn {
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--border2); background: var(--s2); color: var(--sub);
+  cursor: pointer; transition: all 0.15s;
+}
+.cond-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cond-item { cursor: pointer; }
 .cond-item.checked .cond-toggle { background: var(--accent); border-color: var(--accent); }
 .cond-item.checked .cond-toggle svg { stroke: #fff; }
@@ -695,51 +708,86 @@ input::placeholder { color: var(--dim); }
     <div class="page-sub">Your TCG positions</div>
   </div>
 
-  <!-- HERO — total portfolio value like Fidelity account value -->
+  <!-- HERO — plain language collection value -->
   <div class="hero-met" id="portfolio-hero" style="margin-bottom:14px">
-    <div class="hero-met-l">Portfolio value</div>
+    <div class="hero-met-l">My collection value</div>
     <div class="hero-met-v" id="port-value" style="color:var(--gold)">$0.00</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
       <div style="text-align:center">
-        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Invested</div>
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">What I paid</div>
         <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--red)" id="port-cost">$0</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Unrealized P&L</div>
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Potential profit</div>
         <div style="font-size:16px;font-weight:700;font-family:var(--mono)" id="port-pnl">$0</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">ROI</div>
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Gain</div>
         <div style="font-size:16px;font-weight:700;font-family:var(--mono)" id="port-roi">0%</div>
       </div>
     </div>
-    <div class="margin-bar-wrap" style="margin-top:14px"><div class="margin-bar-fill" id="port-bar" style="width:0%;background:var(--amber)"></div></div>
+    <div class="margin-bar-wrap" style="margin-top:14px">
+      <div class="margin-bar-fill" id="port-bar" style="width:0%;background:var(--amber)"></div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);text-align:center;margin-top:6px" id="port-bar-label">Add cards to track your collection</div>
   </div>
 
-  <!-- POSITIONS LIST -->
+  <!-- COLLECTION VALUE CHART -->
+  <div class="card" id="port-chart-card" style="display:none;padding-bottom:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-hd" style="margin-bottom:0">Collection history</div>
+      <div style="display:flex;gap:6px">
+        <button class="chart-range-btn on" onclick="setChartRange('1W',this)">1W</button>
+        <button class="chart-range-btn" onclick="setChartRange('1M',this)">1M</button>
+        <button class="chart-range-btn" onclick="setChartRange('ALL',this)">All</button>
+      </div>
+    </div>
+    <div style="position:relative;height:140px;margin:0 -4px">
+      <canvas id="port-chart" style="width:100%;height:140px"></canvas>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 4px">
+      <span style="font-size:10px;color:var(--dim);font-family:var(--mono)" id="chart-date-start">—</span>
+      <span style="font-size:10px;color:var(--dim);font-family:var(--mono)" id="chart-date-end">Today</span>
+    </div>
+  </div>
+  <div id="port-highlights" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="card" style="margin-bottom:0;text-align:center;padding:16px 12px">
+      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">🏆 Best card</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="best-card-name">—</div>
+      <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--green)" id="best-card-gain">—</div>
+    </div>
+    <div class="card" style="margin-bottom:0;text-align:center;padding:16px 12px">
+      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">✅ Ready to sell</div>
+      <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--amber)" id="ready-count">0</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:2px">hit your profit goal</div>
+    </div>
+  </div>
+
+  <!-- MY CARDS LIST -->
   <div id="positions-wrap">
     <div class="card" id="inv-card" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div class="card-hd" style="margin-bottom:0">Positions <span style="font-size:11px;color:var(--dim);font-family:var(--mono)" id="pos-count"></span></div>
-        <button onclick="refreshAllPrices()" style="font-size:11px;color:var(--gold);background:none;border:1px solid var(--gold);border-radius:20px;padding:4px 12px;cursor:pointer">↻ Refresh all</button>
+        <div class="card-hd" style="margin-bottom:0">My cards <span style="font-size:11px;color:var(--dim);font-family:var(--mono)" id="pos-count"></span></div>
+        <button onclick="refreshAllPrices()" style="font-size:11px;color:var(--gold);background:none;border:1px solid var(--gold);border-radius:20px;padding:4px 12px;cursor:pointer">↻ Update prices</button>
       </div>
       <div id="inv-list"></div>
     </div>
 
     <!-- Empty state -->
     <div id="portfolio-empty" class="card" style="text-align:center;padding:32px 20px">
-      <div style="font-size:32px;margin-bottom:12px">📦</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No positions yet</div>
-      <div style="font-size:12px;color:var(--sub)">Search a card in Prices and add it to your portfolio, or add manually below</div>
+      <div style="font-size:32px;margin-bottom:12px">🃏</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No cards yet</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.6">Search for a card in the <strong>Prices</strong> tab and add it here, or fill in the form below</div>
     </div>
   </div>
 
-  <!-- MARGIN TARGET -->
+  <!-- PROFIT GOAL -->
   <div class="card">
-    <div class="card-hd">Target margin</div>
+    <div class="card-hd">My profit goal</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:12px">How much profit do you want to make when you sell?</div>
     <div class="sync-input-row" style="margin-bottom:0">
       <div class="sync-input-top">
-        <span class="slider-label">Profit margin %</span>
+        <span class="slider-label">Profit %</span>
         <input type="number" class="sync-type" id="t-mg" value="100" min="10" max="300" step="5" oninput="syncMarginFromType()" />
       </div>
       <input type="range" id="s-mg" min="10" max="300" step="5" value="100" oninput="syncMarginFromSlider()">
@@ -747,22 +795,31 @@ input::placeholder { color: var(--dim); }
     <div class="hint-txt" id="mg-hint">At 100% — sell a $10 card for ~$10.87 after fees</div>
   </div>
 
-  <!-- ADD POSITION — at the bottom like a buy form -->
+  <!-- ADD A CARD -->
   <div class="card">
-    <div class="card-hd">Add position</div>
-    <input type="text" id="inv-name" placeholder="Card name" />
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="card-hd">Add a card</div>
+    <input type="text" id="inv-name" placeholder="Card name (e.g. Umbreon Illustration Rare)" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Cost basis $</div>
-        <input type="number" id="inv-cost" placeholder="What you paid" min="0" step="0.50" style="margin-bottom:0" />
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">I paid $</div>
+        <input type="number" id="inv-cost" placeholder="0.00" min="0" step="0.50" style="margin-bottom:0" />
       </div>
       <div>
-        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Market value $</div>
-        <input type="number" id="inv-mkt" placeholder="Current price" min="0" step="0.50" style="margin-bottom:0" />
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Worth now $</div>
+        <input type="number" id="inv-mkt" placeholder="0.00" min="0" step="0.50" style="margin-bottom:0" />
       </div>
     </div>
-    <div style="height:10px"></div>
-    <button class="btn primary" onclick="addCard()">Add to portfolio</button>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Condition</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="cond-btn on" onclick="selectCond(this,'NM')">NM</button>
+        <button class="cond-btn" onclick="selectCond(this,'LP')">LP</button>
+        <button class="cond-btn" onclick="selectCond(this,'MP')">MP</button>
+        <button class="cond-btn" onclick="selectCond(this,'HP')">HP</button>
+        <button class="cond-btn" onclick="selectCond(this,'DMG')">DMG</button>
+      </div>
+    </div>
+    <button class="btn primary" onclick="addCard()">Add to my collection</button>
   </div>
 </div>
 
@@ -1472,7 +1529,147 @@ async function refreshAllPrices() {
   toast('All prices updated ✓');
 }
 
-// ── REFRESH CARD PRICE FROM EBAY ──
+// ── CONDITION SELECTOR ──
+let selectedCondition = 'NM';
+function selectCond(btn, cond) {
+  document.querySelectorAll('.cond-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedCondition = cond;
+}
+
+function renderCards() {
+  const list = document.getElementById('inv-list');
+  const invCard = document.getElementById('inv-card');
+  const empty = document.getElementById('portfolio-empty');
+  const highlights = document.getElementById('port-highlights');
+  list.innerHTML = '';
+
+  if (!cards.length) {
+    invCard.style.display = 'none';
+    empty.style.display = 'block';
+    highlights.style.display = 'none';
+    document.getElementById('port-value').textContent = '$0.00';
+    document.getElementById('port-cost').textContent = '$0';
+    document.getElementById('port-pnl').textContent = '$0';
+    document.getElementById('port-roi').textContent = '0%';
+    document.getElementById('port-bar').style.width = '0%';
+    document.getElementById('port-bar-label').textContent = 'Add cards to track your collection';
+    return;
+  }
+
+  invCard.style.display = 'block';
+  empty.style.display = 'none';
+  highlights.style.display = 'grid';
+
+  const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
+  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
+  const pnl = tm - tc;
+  const roi = tc > 0 ? Math.round((pnl / tc) * 100) : 0;
+  const marginPct = getMarginTarget();
+
+  // Hero metrics
+  document.getElementById('port-value').textContent = '$' + tm.toFixed(2);
+  document.getElementById('port-cost').textContent = '$' + tc.toFixed(2);
+  const pnlEl = document.getElementById('port-pnl');
+  pnlEl.textContent = (pnl >= 0 ? '+$' : '−$') + Math.abs(pnl).toFixed(2);
+  pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const roiEl = document.getElementById('port-roi');
+  roiEl.textContent = (roi >= 0 ? '+' : '') + roi + '%';
+  roiEl.style.color = roi >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const barPct = Math.min(Math.max(roi, 0), 150) / 150 * 100;
+  const bar = document.getElementById('port-bar');
+  bar.style.width = barPct + '%';
+  bar.style.background = roi >= 100 ? 'var(--green)' : roi >= 50 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('port-bar-label').textContent =
+    roi >= 100 ? '🔥 You\'ve doubled your money!' :
+    roi >= 50 ? '📈 Great gains — keep going' :
+    roi > 0 ? '📊 Growing — keep adding cards' : 'Add market values to see your gains';
+
+  // Best card
+  const cardsWithMkt = cards.filter(c => Number(c.market_value) > 0);
+  if (cardsWithMkt.length) {
+    const best = cardsWithMkt.reduce((a,b) =>
+      (Number(b.market_value) - Number(b.cost)) > (Number(a.market_value) - Number(a.cost)) ? b : a
+    );
+    const bestGain = Number(best.market_value) - Number(best.cost);
+    const bestGainPct = Number(best.cost) > 0 ? Math.round((bestGain / Number(best.cost)) * 100) : 0;
+    document.getElementById('best-card-name').textContent = best.card_name;
+    document.getElementById('best-card-gain').textContent = (bestGain >= 0 ? '+$' : '−$') + Math.abs(bestGain).toFixed(2) + ' (' + bestGainPct + '%)';
+  }
+
+  // Ready to sell count
+  const readyCount = cards.filter(c => {
+    const mkt = Number(c.market_value);
+    const target = calcTargetSale(Number(c.cost), marginPct);
+    return mkt > 0 && mkt >= target;
+  }).length;
+  document.getElementById('ready-count').textContent = readyCount;
+  document.getElementById('pos-count').textContent = '(' + cards.length + ')';
+
+  // Card rows
+  cards.forEach(card => {
+    const cost = Number(card.cost);
+    const mkt = Number(card.market_value) || 0;
+    const target = calcTargetSale(cost, marginPct);
+    const gain = mkt - cost;
+    const gainPct = cost > 0 ? Math.round((gain / cost) * 100) : 0;
+    const gainColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
+    const isReady = mkt > 0 && mkt >= target;
+    const cond = card.condition || 'NM';
+
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    row.dataset.id = card.id;
+    row.innerHTML = `
+      <div class="inv-row-inner">
+        <div class="inv-row-content">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+              <div class="inv-row-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
+              <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px;flex-shrink:0">${cond}</span>
+              ${isReady ? '<span style="font-size:9px;font-weight:600;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px;flex-shrink:0">SELL NOW</span>' : ''}
+            </div>
+            <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0" id="refresh-btn-${card.id}">↻</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
+              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">PAID</div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--red)">$${cost.toFixed(2)}</div>
+            </div>
+            ${mkt > 0 ? `
+            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
+              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">WORTH</div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--gold)">$${mkt.toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
+              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">GAIN</div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${gainColor}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>
+            </div>` : `
+            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:2">
+              <div style="font-size:11px;color:var(--dim)">Tap ↻ to get current price</div>
+            </div>`}
+          </div>
+          <div style="margin-top:8px;background:var(--s2);border-radius:8px;padding:8px 10px">
+            <div style="font-size:10px;color:var(--dim);margin-bottom:4px">Sell for to hit your goal</div>
+            <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--amber)">$${target.toFixed(2)}</div>
+          </div>
+          ${mkt > 0 ? `
+          <div style="margin-top:8px">
+            <div style="height:4px;background:var(--s3);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${isReady ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
+            </div>
+            <div style="font-size:10px;color:var(--dim);margin-top:4px">${isReady ? '✅ Ready to sell!' : Math.round((mkt/target)*100) + '% of the way to your goal'}</div>
+          </div>` : ''}
+        </div>
+        <div class="inv-row-actions">
+          <button class="swipe-del" onclick="removeCard('${card.id}')">Remove</button>
+        </div>
+      </div>`;
+    list.appendChild(row);
+    setupSwipe(row);
+  });
+}
 async function refreshCardPrice(id, name, btn) {
   const origText = btn.textContent;
   btn.textContent = '...';
@@ -1507,15 +1704,16 @@ async function addCard() {
   const card_name = document.getElementById('inv-name').value.trim();
   const cost = parseFloat(document.getElementById('inv-cost').value);
   const market_value = parseFloat(document.getElementById('inv-mkt').value) || 0;
-  if (!card_name || isNaN(cost)) { toast('Name and cost required', 'err'); return; }
+  const condition = selectedCondition || 'NM';
+  if (!card_name || isNaN(cost)) { toast('Enter a card name and what you paid', 'err'); return; }
   setSync('saving');
-  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value }]).select();
-  if (error) { toast('Save failed', 'err'); setSync(''); return; }
+  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition }]).select();
+  if (error) { toast('Could not save — try again', 'err'); setSync(''); return; }
   cards.unshift(data[0]);
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-cost').value = '';
   document.getElementById('inv-mkt').value = '';
-  renderCards(); setSync('live'); toast('Card saved ✓');
+  renderCards(); setSync('live'); toast('Added to your collection ✓');
 }
 async function removeCard(id) {
   setSync('saving');
