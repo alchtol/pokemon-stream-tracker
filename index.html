@@ -563,8 +563,8 @@ input::placeholder { color: var(--dim); }
   <div style="display:flex;align-items:center;gap:8px">
     <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark mode">🌙</button>
     <div class="sync-pill">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-label">Connecting</span>
+      <div class="sync-dot" id="sync-dot" style="display:none"></div>
+      <span id="sync-label" style="display:none">Connecting</span>
     </div>
   </div>
 </div>
@@ -1216,8 +1216,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 function setSync(state) {
   const dot = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
-  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'saving' ? ' saving' : '');
-  label.textContent = state === 'live' ? 'Live' : state === 'saving' ? 'Saving' : 'Offline';
+  if (state === 'saving') {
+    dot.style.display = 'block';
+    label.style.display = 'inline';
+    dot.className = 'sync-dot saving';
+    label.textContent = 'Saving';
+  } else {
+    dot.style.display = 'none';
+    label.style.display = 'none';
+  }
 }
 
 // ── TOAST ──
