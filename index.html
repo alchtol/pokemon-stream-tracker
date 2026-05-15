@@ -852,10 +852,11 @@ input::placeholder { color: var(--dim); }
 <div id="binder-modal" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto">
   <div style="position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:12px;z-index:10">
     <button onclick="closeBinder()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text)">←</button>
-    <div>
+    <div style="flex:1">
       <div style="font-size:18px;font-weight:700;color:var(--text)">My Collection</div>
       <div style="font-size:12px;color:var(--sub)" id="binder-count"></div>
     </div>
+    <button onclick="fetchMissingImages()" style="font-size:11px;color:var(--sub);background:var(--s2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer">🖼 Fix images</button>
   </div>
   <div id="binder-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px"></div>
 </div>
@@ -1765,7 +1766,7 @@ async function searchCardSuggestions() {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
     try {
-      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&pageSize=12&select=id,name,set,images,number`);
+      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(q)}*&pageSize=12&select=id,name,set,images,number`);
       const data = await res.json();
       const results = data.data || [];
       if (!results.length) { suggestions.style.display = 'none'; return; }
@@ -2064,10 +2065,27 @@ async function refreshCardPrice(id, name, btn) {
 async function fetchCardImage(name) {
   try {
     const q = encodeURIComponent(name);
-    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${q}"&pageSize=1&select=id,name,images`);
+    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${q}&pageSize=1&select=id,name,images`);
     const data = await res.json();
     return data.data?.[0]?.images?.small || null;
   } catch(e) { return null; }
+}
+
+async function fetchMissingImages() {
+  const missing = cards.filter(c => !c.image_url);
+  if (!missing.length) { toast('All cards have images ✓'); return; }
+  toast(`Fetching ${missing.length} missing images...`);
+  for (const card of missing) {
+    const image_url = await fetchCardImage(card.card_name);
+    if (!image_url) continue;
+    try {
+      await sb.from('inventory').update({ image_url }).eq('id', card.id);
+      card.image_url = image_url;
+    } catch(e) { continue; }
+  }
+  renderCards();
+  openBinder();
+  toast('Images updated ✓');
 }
 async function addCard() {
   const card_name = document.getElementById('inv-name').value.trim();
