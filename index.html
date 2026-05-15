@@ -750,16 +750,18 @@ input::placeholder { color: var(--dim); }
       <span style="font-size:10px;color:var(--dim);font-family:var(--mono)" id="chart-date-end">Today</span>
     </div>
   </div>
-  <div id="port-highlights" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-    <div class="card" style="margin-bottom:0;text-align:center;padding:16px 12px">
+  <div id="port-highlights" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="card" onclick="scrollToBestCard()" style="margin-bottom:0;text-align:center;padding:16px 12px;cursor:pointer;border-color:var(--gold)">
       <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">🏆 Best card</div>
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="best-card-name">—</div>
       <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--green)" id="best-card-gain">—</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px">tap to view ↓</div>
     </div>
-    <div class="card" style="margin-bottom:0;text-align:center;padding:16px 12px">
+    <div class="card" onclick="filterReadyToSell()" style="margin-bottom:0;text-align:center;padding:16px 12px;cursor:pointer">
       <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">✅ Ready to sell</div>
       <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--amber)" id="ready-count">0</div>
       <div style="font-size:11px;color:var(--dim);margin-top:2px">hit your profit goal</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px">tap to filter ↓</div>
     </div>
   </div>
 
@@ -1511,6 +1513,35 @@ async function loadCards() {
     throw e;
   }
 }
+let bestCardId = null;
+let showingReadyOnly = false;
+
+function scrollToBestCard() {
+  if (!bestCardId) return;
+  const row = document.querySelector(`[data-id="${bestCardId}"]`);
+  if (row) {
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.style.transition = 'box-shadow 0.3s';
+    row.style.boxShadow = '0 0 0 2px var(--gold)';
+    setTimeout(() => row.style.boxShadow = '', 2000);
+  }
+}
+
+function filterReadyToSell() {
+  showingReadyOnly = !showingReadyOnly;
+  const rows = document.querySelectorAll('#inv-list .inv-row');
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const card = cards.find(c => String(c.id) === String(id));
+    if (!card) return;
+    const mkt = Number(card.market_value);
+    const target = calcTargetSale(Number(card.cost), getMarginTarget());
+    const isReady = mkt > 0 && mkt >= target;
+    row.style.display = showingReadyOnly && !isReady ? 'none' : '';
+  });
+  toast(showingReadyOnly ? 'Showing ready to sell only — tap again to show all' : 'Showing all cards');
+}
+
 async function refreshAllPrices() {
   if (!cards.length) return;
   toast('Refreshing all prices...');
@@ -1722,10 +1753,13 @@ function renderCards() {
     const best = cardsWithMkt.reduce((a,b) =>
       (Number(b.market_value) - Number(b.cost)) > (Number(a.market_value) - Number(a.cost)) ? b : a
     );
+    bestCardId = best.id;
     const bestGain = Number(best.market_value) - Number(best.cost);
     const bestGainPct = Number(best.cost) > 0 ? Math.round((bestGain / Number(best.cost)) * 100) : 0;
     document.getElementById('best-card-name').textContent = best.card_name;
-    document.getElementById('best-card-gain').textContent = (bestGain >= 0 ? '+$' : '−$') + Math.abs(bestGain).toFixed(2) + ' (' + bestGainPct + '%)';
+    const bestGainEl = document.getElementById('best-card-gain');
+    bestGainEl.textContent = (bestGain >= 0 ? '+$' : '−$') + Math.abs(bestGain).toFixed(2) + ' (' + bestGainPct + '%)';
+    bestGainEl.style.color = bestGain >= 0 ? 'var(--green)' : 'var(--red)';
   }
 
   // Ready to sell count
@@ -1754,43 +1788,48 @@ function renderCards() {
     row.innerHTML = `
       <div class="inv-row-inner">
         <div class="inv-row-content">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div style="display:flex;align-items:center;gap:6px;min-width:0">
-              <div class="inv-row-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
-              <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px;flex-shrink:0">${cond}</span>
-              ${isReady ? '<span style="font-size:9px;font-weight:600;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px;flex-shrink:0">SELL NOW</span>' : ''}
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            ${card.image_url ? `<img src="${card.image_url}" alt="${card.card_name}" style="width:52px;border-radius:4px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2)">` : `<div style="width:52px;height:72px;border-radius:4px;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">🃏</div>`}
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                  <div class="inv-row-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
+                  <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px;flex-shrink:0">${cond}</span>
+                  ${isReady ? '<span style="font-size:9px;font-weight:600;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px;flex-shrink:0">SELL NOW</span>' : ''}
+                </div>
+                <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0" id="refresh-btn-${card.id}">↻</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
+                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
+                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">PAID</div>
+                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--red)">$${cost.toFixed(2)}</div>
+                </div>
+                ${mkt > 0 ? `
+                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
+                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">WORTH</div>
+                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--gold)">$${mkt.toFixed(2)}</div>
+                </div>
+                <div style="text-align:center;background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
+                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">GAIN</div>
+                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:${gainColor}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>
+                </div>` : `
+                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:2">
+                  <div style="font-size:11px;color:var(--dim)">Tap ↻ to get price</div>
+                </div>`}
+              </div>
+              <div style="margin-top:8px;background:var(--s2);border-radius:8px;padding:6px 8px">
+                <div style="font-size:10px;color:var(--dim);margin-bottom:2px">Sell for to hit your goal</div>
+                <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--amber)">$${target.toFixed(2)}</div>
+              </div>
+              ${mkt > 0 ? `
+              <div style="margin-top:6px">
+                <div style="height:3px;background:var(--s3);border-radius:2px;overflow:hidden">
+                  <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${isReady ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
+                </div>
+                <div style="font-size:10px;color:var(--dim);margin-top:3px">${isReady ? '✅ Ready to sell!' : Math.round((mkt/target)*100) + '% of the way to your goal'}</div>
+              </div>` : ''}
             </div>
-            <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0" id="refresh-btn-${card.id}">↻</button>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
-              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">PAID</div>
-              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--red)">$${cost.toFixed(2)}</div>
-            </div>
-            ${mkt > 0 ? `
-            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
-              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">WORTH</div>
-              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--gold)">$${mkt.toFixed(2)}</div>
-            </div>
-            <div style="text-align:center;background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};border-radius:8px;padding:6px 10px;flex:1;min-width:60px">
-              <div style="font-size:9px;color:var(--dim);margin-bottom:2px">GAIN</div>
-              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${gainColor}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>
-            </div>` : `
-            <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 10px;flex:2">
-              <div style="font-size:11px;color:var(--dim)">Tap ↻ to get current price</div>
-            </div>`}
-          </div>
-          <div style="margin-top:8px;background:var(--s2);border-radius:8px;padding:8px 10px">
-            <div style="font-size:10px;color:var(--dim);margin-bottom:4px">Sell for to hit your goal</div>
-            <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--amber)">$${target.toFixed(2)}</div>
-          </div>
-          ${mkt > 0 ? `
-          <div style="margin-top:8px">
-            <div style="height:4px;background:var(--s3);border-radius:2px;overflow:hidden">
-              <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${isReady ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
-            </div>
-            <div style="font-size:10px;color:var(--dim);margin-top:4px">${isReady ? '✅ Ready to sell!' : Math.round((mkt/target)*100) + '% of the way to your goal'}</div>
-          </div>` : ''}
         </div>
         <div class="inv-row-actions">
           <button class="swipe-del" onclick="removeCard('${card.id}')">Remove</button>
@@ -1830,6 +1869,14 @@ async function refreshCardPrice(id, name, btn) {
   }
 }
 
+async function fetchCardImage(name) {
+  try {
+    const q = encodeURIComponent(name);
+    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${q}"&pageSize=1&select=id,name,images`);
+    const data = await res.json();
+    return data.data?.[0]?.images?.small || null;
+  } catch(e) { return null; }
+}
 async function addCard() {
   const card_name = document.getElementById('inv-name').value.trim();
   const cost = parseFloat(document.getElementById('inv-cost').value);
@@ -1837,7 +1884,9 @@ async function addCard() {
   const condition = selectedCondition || 'NM';
   if (!card_name || isNaN(cost)) { toast('Enter a card name and what you paid', 'err'); return; }
   setSync('saving');
-  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition }]).select();
+  toast('Finding card image...');
+  const image_url = await fetchCardImage(card_name);
+  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition, image_url }]).select();
   if (error) { toast('Could not save — try again', 'err'); setSync(''); return; }
   cards.unshift(data[0]);
   document.getElementById('inv-name').value = '';
