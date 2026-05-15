@@ -483,6 +483,8 @@ input::placeholder { color: var(--dim); }
 .platform-margin { font-size: 10px; color: var(--dim); font-family: var(--mono); text-align: right; }
 .best-badge { font-size: 9px; background: var(--green); color: #fff; padding: 2px 7px; border-radius: 10px; font-weight: 600; margin-left: 6px; }
 
+.btn.danger { background: var(--red-glow); color: var(--red); border-color: var(--red); }
+
 /* ── CHART RANGE BUTTONS ── */
 .chart-range-btn {
   padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
@@ -770,7 +772,10 @@ input::placeholder { color: var(--dim); }
     <div class="card" id="inv-card" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-hd" style="margin-bottom:0">My cards <span style="font-size:11px;color:var(--dim);font-family:var(--mono)" id="pos-count"></span></div>
-        <button onclick="refreshAllPrices()" style="font-size:11px;color:var(--gold);background:none;border:1px solid var(--gold);border-radius:20px;padding:4px 12px;cursor:pointer">↻ Update prices</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="openBinder()" style="font-size:11px;color:var(--text);background:var(--s3);border:1px solid var(--border2);border-radius:20px;padding:4px 12px;cursor:pointer">🗂 View all</button>
+          <button onclick="refreshAllPrices()" style="font-size:11px;color:var(--gold);background:none;border:1px solid var(--gold);border-radius:20px;padding:4px 12px;cursor:pointer">↻ Update prices</button>
+        </div>
       </div>
       <div id="inv-list"></div>
     </div>
@@ -800,7 +805,25 @@ input::placeholder { color: var(--dim); }
   <!-- ADD A CARD -->
   <div class="card">
     <div class="card-hd">Add a card</div>
-    <input type="text" id="inv-name" placeholder="Card name (e.g. Umbreon Illustration Rare)" />
+
+    <!-- Card search with image picker -->
+    <div style="position:relative;margin-bottom:10px">
+      <input type="text" id="inv-name" placeholder="Search card name..." oninput="searchCardSuggestions()" autocomplete="off"/>
+      <div id="card-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-sm);z-index:100;max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)"></div>
+    </div>
+
+    <!-- Selected card preview -->
+    <div id="selected-card-preview" style="display:none;margin-bottom:12px;display:none">
+      <div style="display:flex;align-items:center;gap:12px;background:var(--s2);border-radius:var(--r-sm);padding:10px">
+        <img id="preview-img" style="width:48px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2)" src="" alt="">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)" id="preview-name"></div>
+          <div style="font-size:11px;color:var(--sub)" id="preview-set"></div>
+        </div>
+        <button onclick="clearCardSelection()" style="margin-left:auto;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer">×</button>
+      </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
         <div style="font-size:11px;color:var(--sub);margin-bottom:4px">I paid $</div>
@@ -822,6 +845,50 @@ input::placeholder { color: var(--dim); }
       </div>
     </div>
     <button class="btn primary" onclick="addCard()">Add to my collection</button>
+  </div>
+</div>
+
+<!-- ═══ BINDER / COLLECTION MODAL ═══ -->
+<div id="binder-modal" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto">
+  <div style="position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:12px;z-index:10">
+    <button onclick="closeBinder()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text)">←</button>
+    <div>
+      <div style="font-size:18px;font-weight:700;color:var(--text)">My Collection</div>
+      <div style="font-size:12px;color:var(--sub)" id="binder-count"></div>
+    </div>
+  </div>
+  <div id="binder-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px"></div>
+</div>
+
+<!-- ═══ CARD DETAIL MODAL ═══ -->
+<div id="card-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--s1);border-radius:20px;width:100%;max-width:360px;overflow:hidden;position:relative">
+    <button onclick="closeCardDetail()" style="position:absolute;top:12px;right:12px;background:var(--s2);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--text);z-index:10">×</button>
+    <div style="text-align:center;padding:24px 20px 16px">
+      <img id="detail-img" style="width:140px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);margin-bottom:16px" src="" alt="">
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px" id="detail-name"></div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:16px" id="detail-set"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+        <div style="background:var(--s2);border-radius:10px;padding:10px">
+          <div style="font-size:9px;color:var(--dim);margin-bottom:4px">PAID</div>
+          <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--red)" id="detail-cost"></div>
+        </div>
+        <div style="background:var(--s2);border-radius:10px;padding:10px">
+          <div style="font-size:9px;color:var(--dim);margin-bottom:4px">WORTH</div>
+          <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--gold)" id="detail-mkt"></div>
+        </div>
+        <div style="border-radius:10px;padding:10px" id="detail-gain-box">
+          <div style="font-size:9px;color:var(--dim);margin-bottom:4px">GAIN</div>
+          <div style="font-size:15px;font-weight:700;font-family:var(--mono)" id="detail-gain"></div>
+        </div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:10px;color:var(--dim);margin-bottom:4px">Sell for to hit your goal</div>
+        <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--amber)" id="detail-target"></div>
+      </div>
+      <div id="detail-ready" style="display:none;background:var(--green-glow);border:1px solid var(--green);border-radius:10px;padding:10px;margin-bottom:12px;color:var(--green);font-weight:600;font-size:13px">✅ Ready to sell!</div>
+      <button class="btn danger" onclick="removeCardFromDetail()" style="margin-bottom:0">Remove from collection</button>
+    </div>
   </div>
 </div>
 
@@ -1687,6 +1754,131 @@ function drawChart() {
   document.getElementById('chart-date-end').textContent = filtered[filtered.length - 1]?.date === new Date().toISOString().split('T')[0] ? 'Today' : filtered[filtered.length - 1]?.date || '—';
 }
 
+// ── CARD SEARCH SUGGESTIONS ──
+let selectedCardData = null;
+let searchTimeout = null;
+
+async function searchCardSuggestions() {
+  const q = document.getElementById('inv-name').value.trim();
+  const suggestions = document.getElementById('card-suggestions');
+  if (q.length < 2) { suggestions.style.display = 'none'; return; }
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&pageSize=12&select=id,name,set,images,number`);
+      const data = await res.json();
+      const results = data.data || [];
+      if (!results.length) { suggestions.style.display = 'none'; return; }
+      suggestions.innerHTML = '';
+      results.forEach(card => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border)';
+        item.innerHTML = `
+          <img src="${card.images?.small || ''}" style="width:36px;border-radius:3px;flex-shrink:0" alt="">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${card.name}</div>
+            <div style="font-size:11px;color:var(--sub)">${card.set?.name || ''} · #${card.number || ''}</div>
+          </div>`;
+        item.addEventListener('mousedown', () => selectCard(card));
+        item.addEventListener('touchstart', () => selectCard(card));
+        suggestions.appendChild(item);
+      });
+      suggestions.style.display = 'block';
+    } catch(e) { suggestions.style.display = 'none'; }
+  }, 400);
+}
+
+function selectCard(card) {
+  selectedCardData = card;
+  document.getElementById('inv-name').value = card.name;
+  document.getElementById('card-suggestions').style.display = 'none';
+  const preview = document.getElementById('selected-card-preview');
+  preview.style.display = 'block';
+  document.getElementById('preview-img').src = card.images?.small || '';
+  document.getElementById('preview-name').textContent = card.name;
+  document.getElementById('preview-set').textContent = (card.set?.name || '') + (card.number ? ' · #' + card.number : '');
+}
+
+function clearCardSelection() {
+  selectedCardData = null;
+  document.getElementById('inv-name').value = '';
+  document.getElementById('selected-card-preview').style.display = 'none';
+}
+
+// ── BINDER ──
+function openBinder() {
+  const modal = document.getElementById('binder-modal');
+  const grid = document.getElementById('binder-grid');
+  modal.style.display = 'block';
+  document.getElementById('binder-count').textContent = cards.length + ' cards';
+  grid.innerHTML = '';
+  const marginPct = getMarginTarget();
+  cards.forEach(card => {
+    const cost = Number(card.cost);
+    const mkt = Number(card.market_value) || 0;
+    const gain = mkt - cost;
+    const isReady = mkt > 0 && mkt >= calcTargetSale(cost, marginPct);
+    const item = document.createElement('div');
+    item.style.cssText = 'cursor:pointer;position:relative;border-radius:10px;overflow:hidden;background:var(--s2);aspect-ratio:0.72';
+    item.onclick = () => openCardDetail(card);
+    item.innerHTML = `
+      ${card.image_url
+        ? `<img src="${card.image_url}" alt="${card.card_name}" style="width:100%;height:100%;object-fit:cover">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--s3)">🃏</div>`}
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.8) 0%,transparent 50%)"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:6px">
+        <div style="font-size:9px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
+        ${mkt > 0 ? `<div style="font-size:10px;font-weight:700;font-family:var(--mono);color:${gain >= 0 ? '#34d399' : '#f87171'}">${gain >= 0 ? '+' : ''}$${gain.toFixed(0)}</div>` : ''}
+      </div>
+      ${isReady ? `<div style="position:absolute;top:4px;right:4px;background:#34d399;border-radius:4px;padding:2px 4px;font-size:8px;font-weight:700;color:#000">SELL</div>` : ''}
+      ${card.condition ? `<div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);border-radius:4px;padding:2px 4px;font-size:8px;color:#fff">${card.condition}</div>` : ''}`;
+    grid.appendChild(item);
+  });
+}
+
+function closeBinder() {
+  document.getElementById('binder-modal').style.display = 'none';
+}
+
+// ── CARD DETAIL ──
+let detailCardId = null;
+
+function openCardDetail(card) {
+  detailCardId = card.id;
+  const modal = document.getElementById('card-detail-modal');
+  modal.style.display = 'flex';
+  const cost = Number(card.cost);
+  const mkt = Number(card.market_value) || 0;
+  const gain = mkt - cost;
+  const target = calcTargetSale(cost, getMarginTarget());
+  const isReady = mkt > 0 && mkt >= target;
+
+  document.getElementById('detail-img').src = card.image_url || '';
+  document.getElementById('detail-img').style.display = card.image_url ? 'block' : 'none';
+  document.getElementById('detail-name').textContent = card.card_name;
+  document.getElementById('detail-set').textContent = card.condition ? 'Condition: ' + card.condition : '';
+  document.getElementById('detail-cost').textContent = '$' + cost.toFixed(2);
+  document.getElementById('detail-mkt').textContent = mkt > 0 ? '$' + mkt.toFixed(2) : '—';
+  const gainEl = document.getElementById('detail-gain');
+  gainEl.textContent = mkt > 0 ? (gain >= 0 ? '+$' : '−$') + Math.abs(gain).toFixed(2) : '—';
+  gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('detail-gain-box').style.background = gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)';
+  document.getElementById('detail-target').textContent = '$' + target.toFixed(2);
+  document.getElementById('detail-ready').style.display = isReady ? 'block' : 'none';
+}
+
+function closeCardDetail() {
+  document.getElementById('card-detail-modal').style.display = 'none';
+  detailCardId = null;
+}
+
+async function removeCardFromDetail() {
+  if (!detailCardId) return;
+  await removeCard(detailCardId);
+  closeCardDetail();
+  openBinder();
+}
+
 // ── CONDITION SELECTOR ──
 let selectedCondition = 'NM';
 function selectCond(btn, cond) {
@@ -1884,8 +2076,10 @@ async function addCard() {
   const condition = selectedCondition || 'NM';
   if (!card_name || isNaN(cost)) { toast('Enter a card name and what you paid', 'err'); return; }
   setSync('saving');
-  toast('Finding card image...');
-  const image_url = await fetchCardImage(card_name);
+  toast('Adding to collection...');
+  const image_url = selectedCardData?.images?.small || await fetchCardImage(card_name);
+  selectedCardData = null;
+  document.getElementById('selected-card-preview').style.display = 'none';
   const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition, image_url }]).select();
   if (error) { toast('Could not save — try again', 'err'); setSync(''); return; }
   cards.unshift(data[0]);
