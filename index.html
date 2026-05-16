@@ -580,6 +580,91 @@ input::placeholder { color: var(--dim); }
   </div>
 </div>
 
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dash" class="pane on">
+  <div class="page-hd">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">White Toad TCG · Seller OS</div>
+  </div>
+
+  <!-- PORTFOLIO VALUE HERO -->
+  <div class="hero-met" style="margin-bottom:14px;position:relative;overflow:hidden">
+    <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px">Total collection value</div>
+    <div style="font-size:44px;font-weight:700;font-family:var(--mono);color:var(--gold);letter-spacing:-1px" id="dash-total-value">$0.00</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <span style="font-size:13px;font-weight:600;font-family:var(--mono)" id="dash-pnl-badge">—</span>
+      <span style="font-size:12px;color:var(--dim)" id="dash-pnl-label">potential profit</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px">
+      <div style="background:var(--s2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Cards</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--text)" id="dash-card-count">0</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Gain %</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono)" id="dash-roi">0%</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Sell Now</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--amber)" id="dash-ready">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="card">
+    <div class="card-hd">Quick actions</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn primary" onclick="tab('inv', document.querySelectorAll('.nav-btn')[1])" style="margin-bottom:0;font-size:13px">+ Add card</button>
+      <button class="btn" onclick="tab('price', document.querySelectorAll('.nav-btn')[2])" style="margin-bottom:0;font-size:13px">🔍 Look up price</button>
+      <button class="btn" onclick="tab('calc', document.querySelectorAll('.nav-btn')[3])" style="margin-bottom:0;font-size:13px">🧮 Calculator</button>
+      <button class="btn" onclick="openBinder()" style="margin-bottom:0;font-size:13px">🗂 My binder</button>
+    </div>
+  </div>
+
+  <!-- STREAM PERFORMANCE -->
+  <div class="card">
+    <div class="card-hd">Stream performance</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+      <div class="met"><div class="met-l">Total profit</div><div class="met-v g" id="dash-total-profit">$0</div></div>
+      <div class="met"><div class="met-l">Streams logged</div><div class="met-v b" id="dash-stream-count">0</div></div>
+      <div class="met"><div class="met-l">Best stream</div><div class="met-v g" id="dash-best-stream">$0</div></div>
+      <div class="met"><div class="met-l">Avg margin</div><div class="met-v" id="dash-avg-margin">0%</div></div>
+    </div>
+    <button class="btn" onclick="tab('more', document.querySelectorAll('.nav-btn')[4])" style="margin-bottom:0;font-size:12px;color:var(--sub)">View stream log →</button>
+  </div>
+
+  <!-- HOT MOVERS — cards with biggest gains -->
+  <div class="card" id="dash-movers-card" style="display:none">
+    <div class="card-hd">🔥 Top performers</div>
+    <div id="dash-movers"></div>
+  </div>
+
+  <!-- READY TO SELL -->
+  <div class="card" id="dash-sell-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-hd" style="margin-bottom:0">✅ Ready to sell</div>
+      <button onclick="tab('inv', document.querySelectorAll('.nav-btn')[1])" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer">View all →</button>
+    </div>
+    <div id="dash-sell-list"></div>
+  </div>
+
+  <!-- AI INSIGHTS PLACEHOLDER -->
+  <div class="card" style="border:1px dashed var(--border2);background:var(--accent-dim)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="font-size:20px">🤖</div>
+      <div class="card-hd" style="margin-bottom:0">AI Insights</div>
+      <div style="font-size:10px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto">COMING SOON</div>
+    </div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.7">Smart recommendations for what to buy, sell, and grade based on your collection and market trends. Powered by Claude AI.</div>
+  </div>
+
+  <!-- ABOUT -->
+  <div style="text-align:center;padding:16px 0 8px;font-size:11px;color:var(--dim)">
+    White Toad TCG · Seller OS v5.1 · <span style="color:var(--gold)">267 followers · 5★</span>
+  </div>
+</div>
+
 <!-- ═══ CALCULATOR ═══ -->
 <div id="calc" class="pane">
   <div class="page-hd">
@@ -704,7 +789,7 @@ input::placeholder { color: var(--dim); }
 </div>
 
 <!-- ═══ PORTFOLIO ═══ -->
-<div id="inv" class="pane on">
+<div id="inv" class="pane">
   <div class="page-hd">
     <div class="page-title">Portfolio</div>
     <div class="page-sub">Your TCG positions</div>
@@ -1258,26 +1343,34 @@ Next stream coming soon. Follow so you never miss a drop 💪
 <div id="more" class="pane">
   <div class="page-hd">
     <div class="page-title">More</div>
-    <div class="page-sub">Log, promos, and settings</div>
+    <div class="page-sub">Tools, log, and settings</div>
   </div>
 
-  <!-- quick nav cards -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-    <div class="card" onclick="tab('log', document.querySelector('.nav-btn:nth-child(4)'))" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
+    <div class="card" onclick="tab('grade', document.querySelectorAll('.nav-btn')[3]); setTimeout(()=>showToolsTab('grade'),50)" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
+      <div style="font-size:28px;margin-bottom:8px">⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">Grade</div>
+      <div style="font-size:11px;color:var(--sub);margin-top:2px">Centering + condition</div>
+    </div>
+    <div class="card" onclick="tab('log', document.querySelectorAll('.nav-btn')[3]); setTimeout(()=>showToolsTab('log'),50)" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
       <div style="font-size:28px;margin-bottom:8px">📋</div>
       <div style="font-size:14px;font-weight:600;color:var(--text)">Stream Log</div>
       <div style="font-size:11px;color:var(--sub);margin-top:2px">Track every stream</div>
     </div>
-    <div class="card" onclick="tab('promo', document.querySelector('.nav-btn:nth-child(4)'))" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
+    <div class="card" onclick="tab('promo', document.querySelectorAll('.nav-btn')[3]); setTimeout(()=>showToolsTab('promo'),50)" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
       <div style="font-size:28px;margin-bottom:8px">📣</div>
       <div style="font-size:14px;font-weight:600;color:var(--text)">Promo Posts</div>
       <div style="font-size:11px;color:var(--sub);margin-top:2px">Copy-paste ready</div>
     </div>
+    <div class="card" onclick="openBinder()" style="cursor:pointer;text-align:center;padding:20px 14px;margin-bottom:0">
+      <div style="font-size:28px;margin-bottom:8px">🗂</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">My Binder</div>
+      <div style="font-size:11px;color:var(--sub);margin-top:2px">Full collection view</div>
+    </div>
   </div>
 
-  <!-- app info -->
   <div class="card">
-    <div class="card-hd">About</div>
+    <div class="card-hd">About White Toad TCG</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
       <svg width="40" height="50" viewBox="0 0 58 54" style="flex-shrink:0">
         <defs><clipPath id="aboutClip"><polygon points="0,0 58,0 26,54 0,54"/></clipPath></defs>
@@ -1291,31 +1384,31 @@ Next stream coming soon. Follow so you never miss a drop 💪
       </svg>
       <div>
         <div style="font-size:16px;font-weight:700;color:var(--text)">White Toad TCG</div>
-        <div style="font-size:11px;color:var(--gold);letter-spacing:0.15em;font-family:var(--mono)">SELLER OS v5.0</div>
-        <div style="font-size:12px;color:var(--sub);margin-top:4px">The all-in-one TCG reseller dashboard</div>
+        <div style="font-size:11px;color:var(--gold);letter-spacing:0.15em;font-family:var(--mono)">SELLER OS v5.1</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">267 followers · 51 reviews · ⭐⭐⭐⭐⭐</div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--sub);line-height:1.7">Built for Whatnot streamers, TCGPlayer sellers, and card show flippers. Profit tools, grading, pricing, and marketing — in one place.</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.7">The all-in-one TCG seller dashboard for Whatnot streamers, collectors, and resellers.</div>
   </div>
 </div>
 
 <!-- ═══ NAV ═══ -->
 <nav class="nav">
-  <button class="nav-btn on" onclick="tab('inv',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+  <button class="nav-btn on" onclick="tab('dash',this)">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+    Dashboard
+  </button>
+  <button class="nav-btn" onclick="tab('inv',this)">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
     Portfolio
   </button>
   <button class="nav-btn" onclick="tab('price',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
     Prices
   </button>
-  <button class="nav-btn" onclick="tab('grade',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
-    Grade
-  </button>
   <button class="nav-btn" onclick="tab('calc',this)">
-    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
-    Calc
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
+    Tools
   </button>
   <button class="nav-btn" onclick="tab('more',this)">
     <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg></span>
@@ -1576,6 +1669,7 @@ async function loadCards() {
     cards = data || [];
     renderCards();
     setSync('live');
+    updateDashboard();
   } catch(e) {
     console.error('loadCards error:', JSON.stringify(e));
     throw e;
@@ -1626,6 +1720,102 @@ async function refreshAllPrices() {
   }
   renderCards();
   toast('All prices updated ✓');
+}
+
+// ── DASHBOARD ──
+function updateDashboard() {
+  // Portfolio stats
+  const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
+  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
+  const pnl = tm - tc;
+  const roi = tc > 0 ? Math.round((pnl / tc) * 100) : 0;
+  const marginPct = getMarginTarget();
+
+  document.getElementById('dash-total-value').textContent = '$' + tm.toFixed(2);
+  document.getElementById('dash-card-count').textContent = cards.length;
+
+  const pnlBadge = document.getElementById('dash-pnl-badge');
+  pnlBadge.textContent = (pnl >= 0 ? '+$' : '−$') + Math.abs(pnl).toFixed(2);
+  pnlBadge.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const roiEl = document.getElementById('dash-roi');
+  roiEl.textContent = (roi >= 0 ? '+' : '') + roi + '%';
+  roiEl.style.color = roi >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Ready to sell
+  const readyCards = cards.filter(c => {
+    const mkt = Number(c.market_value);
+    return mkt > 0 && mkt >= calcTargetSale(Number(c.cost), marginPct);
+  });
+  document.getElementById('dash-ready').textContent = readyCards.length;
+
+  // Stream stats
+  const totalProfit = streams.reduce((a,s) => a + Number(s.profit || 0), 0);
+  const avgMargin = streams.length ? Math.round(streams.reduce((a,s) => a + Number(s.margin || 0), 0) / streams.length) : 0;
+  const bestStream = streams.length ? Math.max(...streams.map(s => Number(s.profit || 0))) : 0;
+
+  document.getElementById('dash-total-profit').textContent = (totalProfit >= 0 ? '+$' : '−$') + Math.abs(totalProfit).toFixed(0);
+  document.getElementById('dash-stream-count').textContent = streams.length;
+  document.getElementById('dash-best-stream').textContent = '+$' + bestStream.toFixed(0);
+  document.getElementById('dash-avg-margin').textContent = avgMargin + '%';
+
+  // Top performers
+  const withGains = cards.filter(c => Number(c.market_value) > 0).map(c => ({
+    ...c, gain: Number(c.market_value) - Number(c.cost),
+    gainPct: Number(c.cost) > 0 ? Math.round(((Number(c.market_value) - Number(c.cost)) / Number(c.cost)) * 100) : 0
+  })).sort((a,b) => b.gain - a.gain).slice(0,3);
+
+  const moversCard = document.getElementById('dash-movers-card');
+  const moversList = document.getElementById('dash-movers');
+  if (withGains.length) {
+    moversCard.style.display = 'block';
+    moversList.innerHTML = '';
+    withGains.forEach((c, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 0;${i < withGains.length-1 ? 'border-bottom:1px solid var(--border)' : ''}`;
+      row.innerHTML = `
+        ${c.image_url ? `<img src="${c.image_url}" style="width:36px;border-radius:4px;flex-shrink:0" alt="">` : `<div style="width:36px;height:50px;border-radius:4px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🃏</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.card_name}</div>
+          <div style="font-size:11px;color:var(--sub)">Paid $${Number(c.cost).toFixed(2)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${c.gain >= 0 ? 'var(--green)' : 'var(--red)'}">${c.gain >= 0 ? '+$' : '−$'}${Math.abs(c.gain).toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--dim)">${c.gainPct}% gain</div>
+        </div>`;
+      moversList.appendChild(row);
+    });
+  } else {
+    moversCard.style.display = 'none';
+  }
+
+  // Ready to sell list
+  const sellCard = document.getElementById('dash-sell-card');
+  const sellList = document.getElementById('dash-sell-list');
+  if (readyCards.length) {
+    sellCard.style.display = 'block';
+    sellList.innerHTML = '';
+    readyCards.slice(0,3).forEach((c, i) => {
+      const mkt = Number(c.market_value);
+      const cost = Number(c.cost);
+      const gain = mkt - cost;
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 0;${i < Math.min(readyCards.length,3)-1 ? 'border-bottom:1px solid var(--border)' : ''}`;
+      row.innerHTML = `
+        ${c.image_url ? `<img src="${c.image_url}" style="width:36px;border-radius:4px;flex-shrink:0" alt="">` : `<div style="width:36px;height:50px;border-radius:4px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🃏</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.card_name}</div>
+          <div style="font-size:11px;color:var(--sub)">Target: $${calcTargetSale(cost, marginPct).toFixed(2)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--green)">$${mkt.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--green)">+$${gain.toFixed(2)} gain</div>
+        </div>`;
+      sellList.appendChild(row);
+    });
+  } else {
+    sellCard.style.display = 'none';
+  }
 }
 
 // ── PORTFOLIO CHART ──
@@ -2282,6 +2472,7 @@ async function loadStreams() {
     if (error) throw error;
     streams = data || [];
     renderStreams();
+    updateDashboard();
   } catch(e) {
     console.error('loadStreams error:', e);
     throw e;
@@ -2849,6 +3040,7 @@ async function init() {
   document.getElementById('loading-overlay').classList.add('hidden');
   try {
     await Promise.all([loadCards(), loadStreams(), loadSnapshots()]);
+    updateDashboard();
   } catch(e) {
     // Silent fail
   }
