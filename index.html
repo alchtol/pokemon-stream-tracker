@@ -492,6 +492,21 @@ input::placeholder { color: var(--dim); }
 }
 .chart-range-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+.folder-btn {
+  padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border2); background: var(--s2); color: var(--sub);
+  cursor: pointer; transition: all 0.15s;
+}
+.folder-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── FOLDER TABS ── */
+.folder-tab {
+  padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--border2); background: var(--s2); color: var(--sub);
+  cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+}
+.folder-tab.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* ── CONDITION BUTTONS ── */
 .cond-btn {
   padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -576,6 +591,9 @@ input::placeholder { color: var(--dim); }
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button onclick="openGlobalSearch()" style="background:none;border:1px solid var(--border2);border-radius:10px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;color:var(--sub)" aria-label="Search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
     <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark mode">🌙</button>
   </div>
 </div>
@@ -791,8 +809,24 @@ input::placeholder { color: var(--dim); }
 <!-- ═══ PORTFOLIO ═══ -->
 <div id="inv" class="pane">
   <div class="page-hd">
-    <div class="page-title">Portfolio</div>
-    <div class="page-sub">Your TCG positions</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Portfolio</div>
+        <div class="page-sub">Your TCG positions</div>
+      </div>
+      <button onclick="exportCSV()" style="font-size:11px;color:var(--sub);background:var(--s2);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- FOLDER TABS -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
+    <button class="folder-tab on" onclick="switchFolder('all',this)">All cards</button>
+    <button class="folder-tab" onclick="switchFolder('collection',this)">📦 Collection</button>
+    <button class="folder-tab" onclick="switchFolder('for_sale',this)">🏷 For Sale</button>
+    <button class="folder-tab" onclick="switchFolder('watchlist',this)">👁 Watchlist</button>
   </div>
 
   <!-- HERO — plain language collection value -->
@@ -929,6 +963,14 @@ input::placeholder { color: var(--dim); }
         <button class="cond-btn" onclick="selectCond(this,'DMG')">DMG</button>
       </div>
     </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Add to</div>
+      <div style="display:flex;gap:6px">
+        <button class="folder-btn on" onclick="selectFolder(this,'collection')">📦 Collection</button>
+        <button class="folder-btn" onclick="selectFolder(this,'for_sale')">🏷 For Sale</button>
+        <button class="folder-btn" onclick="selectFolder(this,'watchlist')">👁 Watchlist</button>
+      </div>
+    </div>
     <button class="btn primary" onclick="addCard()">Add to my collection</button>
   </div>
 </div>
@@ -985,9 +1027,15 @@ input::placeholder { color: var(--dim); }
     <div class="page-sub">Every stream tracked</div>
   </div>
 
+  <!-- CALENDAR VIEW -->
+  <div class="card">
+    <div class="card-hd">Stream calendar</div>
+    <div id="stream-calendar"></div>
+  </div>
+
   <div class="card">
     <div class="card-hd">Log a stream</div>
-    <input type="text" id="l-date" placeholder="Date (e.g. May 8)" />
+    <input type="date" id="l-date" style="margin-bottom:8px"/>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <input type="number" id="l-bi" placeholder="Buy-in $" min="0" style="margin-bottom:0" />
       <input type="number" id="l-rv" placeholder="Revenue $" min="0" style="margin-bottom:0" />
@@ -1392,6 +1440,20 @@ Next stream coming soon. Follow so you never miss a drop 💪
   </div>
 </div>
 
+<!-- ═══ GLOBAL SEARCH MODAL ═══ -->
+<div id="search-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;align-items:flex-start;justify-content:center;padding:60px 16px 16px">
+  <div style="background:var(--s1);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.4)">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="global-search-input" type="text" placeholder="Search your collection..." oninput="runGlobalSearch()" style="flex:1;border:none;background:none;font-size:15px;color:var(--text);outline:none;padding:4px 0">
+      <button onclick="closeGlobalSearch()" style="background:none;border:none;font-size:20px;color:var(--dim);cursor:pointer">×</button>
+    </div>
+    <div id="search-results-list" style="max-height:400px;overflow-y:auto">
+      <div style="text-align:center;padding:32px;color:var(--sub);font-size:13px">Type to search your cards</div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ NAV ═══ -->
 <nav class="nav">
   <button class="nav-btn on" onclick="tab('dash',this)">
@@ -1720,6 +1782,183 @@ async function refreshAllPrices() {
   }
   renderCards();
   toast('All prices updated ✓');
+}
+
+// ── PORTFOLIO FOLDERS ──
+let currentFolder = 'all';
+let selectedFolder = 'collection';
+
+function switchFolder(folder, btn) {
+  currentFolder = folder;
+  document.querySelectorAll('.folder-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCards();
+}
+
+function selectFolder(btn, folder) {
+  selectedFolder = folder;
+  document.querySelectorAll('.folder-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function getFilteredCards() {
+  if (currentFolder === 'all') return cards;
+  return cards.filter(c => (c.folder || 'collection') === currentFolder);
+}
+
+// ── CSV EXPORT ──
+function exportCSV() {
+  const rows = [['Card Name', 'Folder', 'Condition', 'Cost', 'Market Value', 'Gain/Loss', 'Gain %', 'Target Sale Price']];
+  const marginPct = getMarginTarget();
+  cards.forEach(c => {
+    const cost = Number(c.cost);
+    const mkt = Number(c.market_value) || 0;
+    const gain = mkt - cost;
+    const gainPct = cost > 0 ? Math.round((gain/cost)*100) : 0;
+    const target = calcTargetSale(cost, marginPct);
+    rows.push([
+      c.card_name,
+      c.folder || 'collection',
+      c.condition || 'NM',
+      cost.toFixed(2),
+      mkt > 0 ? mkt.toFixed(2) : '',
+      mkt > 0 ? gain.toFixed(2) : '',
+      mkt > 0 ? gainPct + '%' : '',
+      target.toFixed(2)
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'white-toad-tcg-portfolio-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Portfolio exported ✓');
+}
+
+// ── GLOBAL SEARCH ──
+let searchOpen = false;
+
+function openGlobalSearch() {
+  searchOpen = true;
+  const modal = document.getElementById('search-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('global-search-input').focus(), 100);
+}
+
+function closeGlobalSearch() {
+  searchOpen = false;
+  document.getElementById('search-modal').style.display = 'none';
+  document.getElementById('global-search-input').value = '';
+  document.getElementById('search-results-list').innerHTML = '';
+}
+
+function runGlobalSearch() {
+  const q = document.getElementById('global-search-input').value.trim().toLowerCase();
+  const list = document.getElementById('search-results-list');
+  list.innerHTML = '';
+  if (!q) return;
+
+  const results = cards.filter(c => c.card_name.toLowerCase().includes(q));
+  if (!results.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--sub);font-size:13px">No cards found</div>';
+    return;
+  }
+  results.forEach(card => {
+    const cost = Number(card.cost);
+    const mkt = Number(card.market_value) || 0;
+    const gain = mkt - cost;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--border);cursor:pointer';
+    row.onclick = () => { closeGlobalSearch(); openCardDetail(card); };
+    row.innerHTML = `
+      ${card.image_url ? `<img src="${card.image_url}" style="width:36px;border-radius:4px;flex-shrink:0">` : `<div style="width:36px;height:50px;background:var(--s3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🃏</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${card.card_name}</div>
+        <div style="font-size:11px;color:var(--sub)">${card.folder || 'collection'} · ${card.condition || 'NM'} · Paid $${cost.toFixed(2)}</div>
+      </div>
+      ${mkt > 0 ? `<div style="font-size:13px;font-weight:700;font-family:var(--mono);color:${gain >= 0 ? 'var(--green)' : 'var(--red)'}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>` : ''}`;
+    list.appendChild(row);
+  });
+}
+
+// ── STREAM CALENDAR ──
+let calendarMonth = new Date().getMonth();
+let calendarYear = new Date().getFullYear();
+
+function renderCalendar() {
+  const cal = document.getElementById('stream-calendar');
+  if (!cal) return;
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+  // Get stream dates for this month
+  const streamDates = {};
+  streams.forEach(s => {
+    if (!s.date) return;
+    const d = new Date(s.date);
+    if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
+      streamDates[d.getDate()] = s;
+    }
+  });
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button onclick="prevMonth()" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--text)">←</button>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">${monthNames[calendarMonth]} ${calendarYear}</div>
+      <button onclick="nextMonth()" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--text)">→</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+      ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<div style="text-align:center;font-size:10px;color:var(--dim);padding:4px 0;font-weight:600">${d}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">`;
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div style="padding:6px;min-height:32px"></div>';
+  }
+
+  const today = new Date();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = day === today.getDate() && calendarMonth === today.getMonth() && calendarYear === today.getFullYear();
+    const stream = streamDates[day];
+    const profit = stream ? Number(stream.profit || 0) : 0;
+    html += `<div onclick="${stream ? `showStreamDay(${day})` : ''}" style="
+      padding:4px;min-height:36px;border-radius:6px;text-align:center;
+      ${isToday ? 'border:2px solid var(--accent);' : ''}
+      ${stream ? 'background:var(--green-glow);cursor:pointer;' : ''}
+      transition:background 0.15s">
+      <div style="font-size:11px;font-weight:${isToday ? '700' : '400'};color:${isToday ? 'var(--accent)' : 'var(--text)'}">${day}</div>
+      ${stream ? `<div style="font-size:9px;font-weight:700;color:${profit >= 0 ? 'var(--green)' : 'var(--red)'}">$${Math.abs(profit).toFixed(0)}</div>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  cal.innerHTML = html;
+}
+
+function prevMonth() {
+  calendarMonth--;
+  if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+  renderCalendar();
+}
+
+function nextMonth() {
+  calendarMonth++;
+  if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+  renderCalendar();
+}
+
+function showStreamDay(day) {
+  const stream = streams.find(s => {
+    if (!s.date) return false;
+    const d = new Date(s.date);
+    return d.getDate() === day && d.getMonth() === calendarMonth && d.getFullYear() === calendarYear;
+  });
+  if (!stream) return;
+  toast(`${stream.date}: +$${stream.revenue} revenue, $${stream.profit} profit`);
 }
 
 // ── DASHBOARD ──
@@ -2104,9 +2343,6 @@ function renderCards() {
 
   const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
   const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
-  const pnl = tm - tc;
-  const roi = tc > 0 ? Math.round((pnl / tc) * 100) : 0;
-  const marginPct = getMarginTarget();
 
   // Hero metrics
   document.getElementById('port-value').textContent = '$' + tm.toFixed(2);
@@ -2152,10 +2388,10 @@ function renderCards() {
     return mkt > 0 && mkt >= target;
   }).length;
   document.getElementById('ready-count').textContent = readyCount;
-  document.getElementById('pos-count').textContent = '(' + cards.length + ')';
+  document.getElementById('pos-count').textContent = '(' + cards.length + (currentFolder !== 'all' ? ` · showing ${getFilteredCards().length}` : '') + ')';
 
-  // Card rows
-  cards.forEach(card => {
+  // Card rows — filtered by folder
+  getFilteredCards().forEach(card => {
     const cost = Number(card.cost);
     const mkt = Number(card.market_value) || 0;
     const target = calcTargetSale(cost, marginPct);
@@ -2164,6 +2400,7 @@ function renderCards() {
     const gainColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
     const isReady = mkt > 0 && mkt >= target;
     const cond = card.condition || 'NM';
+    const folderLabel = { collection: '📦', for_sale: '🏷', watchlist: '👁' }[card.folder || 'collection'] || '📦';
 
     const row = document.createElement('div');
     row.className = 'inv-row';
@@ -2178,6 +2415,7 @@ function renderCards() {
                 <div style="display:flex;align-items:center;gap:6px;min-width:0">
                   <div class="inv-row-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
                   <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px;flex-shrink:0">${cond}</span>
+                  <span style="font-size:9px;flex-shrink:0">${folderLabel}</span>
                   ${isReady ? '<span style="font-size:9px;font-weight:600;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px;flex-shrink:0">SELL NOW</span>' : ''}
                 </div>
                 <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0" id="refresh-btn-${card.id}">↻</button>
@@ -2288,7 +2526,7 @@ async function addCard() {
   const image_url = selectedCardData?.images?.small || await fetchCardImage(card_name);
   selectedCardData = null;
   document.getElementById('selected-card-preview').style.display = 'none';
-  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition, image_url }]).select();
+  const { data, error } = await sb.from('inventory').insert([{ card_name, cost, market_value, condition, image_url, folder: selectedFolder }]).select();
   if (error) { toast('Could not save — try again', 'err'); setSync(''); return; }
   cards.unshift(data[0]);
   document.getElementById('inv-name').value = '';
@@ -2382,89 +2620,6 @@ document.addEventListener('mousedown', e => {
   if (form && !form.contains(e.target)) saveEdit(activeEditId);
 });
 
-function renderCards() {
-  const list = document.getElementById('inv-list');
-  const invCard = document.getElementById('inv-card');
-  const empty = document.getElementById('portfolio-empty');
-  list.innerHTML = '';
-
-  if (!cards.length) {
-    invCard.style.display = 'none';
-    empty.style.display = 'block';
-    document.getElementById('port-value').textContent = '$0.00';
-    document.getElementById('port-cost').textContent = '$0';
-    document.getElementById('port-pnl').textContent = '$0';
-    document.getElementById('port-roi').textContent = '0%';
-    document.getElementById('port-bar').style.width = '0%';
-    return;
-  }
-
-  invCard.style.display = 'block';
-  empty.style.display = 'none';
-
-  const tc = cards.reduce((a,c) => a + Number(c.cost), 0);
-  const tm = cards.reduce((a,c) => a + (Number(c.market_value) || 0), 0);
-  const pnl = tm - tc;
-  const roi = tc > 0 ? Math.round((pnl / tc) * 100) : 0;
-
-  // Portfolio hero
-  document.getElementById('port-value').textContent = '$' + tm.toFixed(2);
-  document.getElementById('port-cost').textContent = '$' + tc.toFixed(2);
-  const pnlEl = document.getElementById('port-pnl');
-  pnlEl.textContent = (pnl >= 0 ? '+$' : '−$') + Math.abs(pnl).toFixed(2);
-  pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const roiEl = document.getElementById('port-roi');
-  roiEl.textContent = (roi >= 0 ? '+' : '') + roi + '%';
-  roiEl.style.color = roi >= 0 ? 'var(--green)' : 'var(--red)';
-
-  const barPct = Math.min(Math.max(roi, 0), 150) / 150 * 100;
-  const bar = document.getElementById('port-bar');
-  bar.style.width = barPct + '%';
-  bar.style.background = roi >= 100 ? 'var(--green)' : roi >= 50 ? 'var(--amber)' : 'var(--red)';
-
-  document.getElementById('pos-count').textContent = '(' + cards.length + ')';
-
-  const marginPct = getMarginTarget();
-
-  cards.forEach(card => {
-    const cost = Number(card.cost);
-    const mkt = Number(card.market_value) || 0;
-    const target = calcTargetSale(cost, marginPct);
-    const gain = mkt - cost;
-    const gainPct = cost > 0 ? Math.round((gain / cost) * 100) : 0;
-    const gainColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
-
-    const row = document.createElement('div');
-    row.className = 'inv-row';
-    row.dataset.id = card.id;
-    row.innerHTML = `
-      <div class="inv-row-inner">
-        <div class="inv-row-content">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div class="inv-row-name">${card.card_name}</div>
-            <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 10px;cursor:pointer;flex-shrink:0;margin-left:8px" id="refresh-btn-${card.id}">↻ Refresh</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
-            <span class="chip chip-red">Cost $${cost.toFixed(2)}</span>
-            ${mkt > 0 ? `<span class="chip chip-gold" id="mkt-chip-${card.id}">Mkt $${mkt.toFixed(2)}</span>` : `<span class="chip" style="color:var(--dim);border-color:var(--border)" id="mkt-chip-${card.id}">No price yet</span>`}
-            <span class="chip chip-amber">Target $${target.toFixed(2)}</span>
-            ${mkt > 0 ? `<span class="chip" style="background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};color:${gainColor};border-color:${gainColor}20">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)} (${gainPct}%)</span>` : ''}
-          </div>
-          ${mkt > 0 ? `
-          <div style="margin-top:8px">
-            <div style="height:3px;background:var(--s3);border-radius:2px;overflow:hidden">
-              <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${gain >= 0 ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
-            </div>
-          </div>` : ''}
-        </div>
-        <div class="inv-row-actions">
-          <button class="swipe-del" onclick="removeCard('${card.id}')">Remove</button>
-        </div>
-      </div>`;
-    list.appendChild(row);
-    setupSwipe(row);
-  });
-}
 let streams = [];
 async function loadStreams() {
   try {
@@ -2472,6 +2627,7 @@ async function loadStreams() {
     if (error) throw error;
     streams = data || [];
     renderStreams();
+    renderCalendar();
     updateDashboard();
   } catch(e) {
     console.error('loadStreams error:', e);
@@ -2491,8 +2647,8 @@ async function addStream() {
   const { data, error } = await sb.from('stream_log').insert([{ date, buy_in, revenue, profit, margin, notes }]).select();
   if (error) { toast('Save failed', 'err'); setSync(''); return; }
   streams.unshift(data[0]);
-  ['l-date','l-bi','l-rv','l-note'].forEach(id => document.getElementById(id).value = '');
-  renderStreams(); setSync('live'); toast('Stream logged ✓');
+  ['l-bi','l-rv','l-note'].forEach(id => document.getElementById(id).value = '');
+  renderStreams(); renderCalendar(); setSync('live'); toast('Stream logged ✓');
 }
 function renderStreams() {
   const empty = document.getElementById('log-empty');
@@ -3041,6 +3197,7 @@ async function init() {
   try {
     await Promise.all([loadCards(), loadStreams(), loadSnapshots()]);
     updateDashboard();
+    renderCalendar();
   } catch(e) {
     // Silent fail
   }
