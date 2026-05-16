@@ -2414,58 +2414,47 @@ function renderCards() {
     row.className = 'inv-row';
     row.dataset.id = card.id;
     row.innerHTML = `
-      <div class="inv-row-inner">
-        <div class="inv-row-content">
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            ${card.image_url ? `<img src="${card.image_url}" alt="${card.card_name}" style="width:52px;border-radius:4px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2)">` : `<div style="width:52px;height:72px;border-radius:4px;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">🃏</div>`}
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                <div style="display:flex;align-items:center;gap:6px;min-width:0">
-                  <div class="inv-row-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${card.card_name}</div>
-                  <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px;flex-shrink:0">${cond}</span>
-                  <span style="font-size:9px;flex-shrink:0">${folderLabel}</span>
-                  ${isReady ? '<span style="font-size:9px;font-weight:600;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px;flex-shrink:0">SELL NOW</span>' : ''}
-                </div>
-                <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0" id="refresh-btn-${card.id}">↻</button>
+      <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          ${card.image_url ? `<img src="${card.image_url}" alt="${card.card_name}" style="width:52px;border-radius:4px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2)">` : `<div style="width:52px;height:72px;border-radius:4px;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">🃏</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+              <div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${card.card_name}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                <span style="font-size:9px;font-weight:600;color:var(--sub);background:var(--s3);border-radius:4px;padding:2px 5px">${cond}</span>
+                <span style="font-size:9px">${folderLabel}</span>
+                ${isReady ? '<span style="font-size:9px;font-weight:700;color:var(--green);background:var(--green-glow);border-radius:4px;padding:2px 6px">SELL</span>' : ''}
               </div>
-              <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
-                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
-                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">PAID</div>
-                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--red)">$${cost.toFixed(2)}</div>
-                </div>
-                ${mkt > 0 ? `
-                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
-                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">WORTH</div>
-                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--gold)">$${mkt.toFixed(2)}</div>
-                </div>
-                <div style="text-align:center;background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};border-radius:8px;padding:5px 8px;flex:1;min-width:50px">
-                  <div style="font-size:9px;color:var(--dim);margin-bottom:2px">GAIN</div>
-                  <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:${gainColor}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>
-                </div>` : `
-                <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:2">
-                  <div style="font-size:11px;color:var(--dim)">Tap ↻ to get price</div>
-                </div>`}
-              </div>
-              <div style="margin-top:8px;background:var(--s2);border-radius:8px;padding:6px 8px">
-                <div style="font-size:10px;color:var(--dim);margin-bottom:2px">Sell for to hit your goal</div>
-                <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--amber)">$${target.toFixed(2)}</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1">
+                <div style="font-size:9px;color:var(--dim);margin-bottom:1px">PAID</div>
+                <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--red)">$${cost.toFixed(2)}</div>
               </div>
               ${mkt > 0 ? `
-              <div style="margin-top:6px">
-                <div style="height:3px;background:var(--s3);border-radius:2px;overflow:hidden">
-                  <div style="height:100%;width:${Math.min((mkt/target)*100,100).toFixed(1)}%;background:${isReady ? 'var(--green)' : 'var(--amber)'};border-radius:2px;transition:width 0.3s"></div>
-                </div>
-                <div style="font-size:10px;color:var(--dim);margin-top:3px">${isReady ? '✅ Ready to sell!' : Math.round((mkt/target)*100) + '% of the way to your goal'}</div>
-              </div>` : ''}
+              <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:1">
+                <div style="font-size:9px;color:var(--dim);margin-bottom:1px">WORTH</div>
+                <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--gold)">$${mkt.toFixed(2)}</div>
+              </div>
+              <div style="text-align:center;background:${gain >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'};border-radius:8px;padding:5px 8px;flex:1">
+                <div style="font-size:9px;color:var(--dim);margin-bottom:1px">GAIN</div>
+                <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:${gainColor}">${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}</div>
+              </div>` : `
+              <div style="text-align:center;background:var(--s2);border-radius:8px;padding:5px 8px;flex:2;display:flex;align-items:center;justify-content:center">
+                <div style="font-size:11px;color:var(--dim)">Tap ↻ to get price</div>
+              </div>`}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="font-size:11px;color:var(--amber);font-weight:600">Sell target: $${target.toFixed(2)}</div>
+              <div style="display:flex;gap:6px">
+                <button onclick="refreshCardPrice('${card.id}','${card.card_name.replace(/'/g,"\\'")}',this)" style="font-size:11px;color:var(--sub);background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer" id="refresh-btn-${card.id}">↻ Price</button>
+                <button onclick="removeCard('${card.id}')" style="font-size:11px;color:var(--red);background:none;border:1px solid var(--red);border-radius:20px;padding:4px 10px;cursor:pointer">Remove</button>
+              </div>
             </div>
           </div>
         </div>
-        <div class="inv-row-actions">
-          <button class="swipe-del" onclick="removeCard('${card.id}')">Remove</button>
-        </div>
       </div>`;
     list.appendChild(row);
-    setupSwipe(row);
   });
 }
 async function refreshCardPrice(id, name, btn) {
