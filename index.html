@@ -928,7 +928,7 @@ input::placeholder { color: var(--dim); }
     <!-- Card search with image picker -->
     <div style="position:relative;margin-bottom:10px">
       <input type="text" id="inv-name" placeholder="Search card name..." oninput="searchCardSuggestions()" autocomplete="off"/>
-      <div id="card-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-sm);z-index:100;max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)"></div>
+      <div id="card-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-sm);z-index:100;max-height:380px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,0.25);margin-top:4px"></div>
     </div>
 
     <!-- Selected card preview -->
@@ -2193,29 +2193,37 @@ async function searchCardSuggestions() {
   const suggestions = document.getElementById('card-suggestions');
   if (q.length < 2) { suggestions.style.display = 'none'; return; }
   clearTimeout(searchTimeout);
+  suggestions.innerHTML = '<div style="padding:12px;text-align:center;color:var(--sub);font-size:12px">Searching...</div>';
+  suggestions.style.display = 'block';
   searchTimeout = setTimeout(async () => {
     try {
-      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(q)}*&pageSize=12&select=id,name,set,images,number`);
+      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(q)}*&pageSize=20&select=id,name,set,images,number`);
       const data = await res.json();
       const results = data.data || [];
-      if (!results.length) { suggestions.style.display = 'none'; return; }
-      suggestions.innerHTML = '';
+      if (!results.length) {
+        suggestions.innerHTML = '<div style="padding:16px;text-align:center;color:var(--sub);font-size:12px">No cards found — try a different name</div>';
+        return;
+      }
+      suggestions.innerHTML = `<div style="padding:8px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">${results.length} cards found — tap the correct one</div>`;
       results.forEach(card => {
         const item = document.createElement('div');
-        item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border)';
+        item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s';
         item.innerHTML = `
-          <img src="${card.images?.small || ''}" style="width:36px;border-radius:3px;flex-shrink:0" alt="">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">${card.name}</div>
-            <div style="font-size:11px;color:var(--sub)">${card.set?.name || ''} · #${card.number || ''}</div>
-          </div>`;
-        item.addEventListener('mousedown', () => selectCard(card));
-        item.addEventListener('touchstart', () => selectCard(card));
+          <img src="${card.images?.small || ''}" style="width:44px;height:61px;border-radius:4px;flex-shrink:0;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,0.2)" alt="${card.name}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">${card.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${card.set?.name || ''}</div>
+            <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">#${card.number || '—'}</div>
+          </div>
+          <div style="font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0">Select →</div>`;
+        item.addEventListener('mousedown', (e) => { e.preventDefault(); selectCard(card); });
+        item.addEventListener('touchstart', (e) => { e.preventDefault(); selectCard(card); }, { passive: false });
         suggestions.appendChild(item);
       });
-      suggestions.style.display = 'block';
-    } catch(e) { suggestions.style.display = 'none'; }
-  }, 400);
+    } catch(e) {
+      suggestions.innerHTML = '<div style="padding:16px;text-align:center;color:var(--sub);font-size:12px">Search unavailable — add manually</div>';
+    }
+  }, 350);
 }
 
 function selectCard(card) {
@@ -2538,8 +2546,8 @@ async function removeCard(id) {
   setSync('saving');
   const { error } = await sb.from('inventory').delete().eq('id', id);
   if (error) { toast('Delete failed', 'err'); setSync('live'); return; }
-  cards = cards.filter(c => c.id !== id);
-  renderCards(); setSync('live'); toast('Removed');
+  cards = cards.filter(c => String(c.id) !== String(id));
+  renderCards(); updateDashboard(); setSync('live'); toast('Removed ✓');
 }
 
 function addSwipe(id) {
@@ -2570,8 +2578,30 @@ function addSwipe(id) {
   });
 }
 
-function closeAllSwipes() {
-  document.querySelectorAll('.inv-row.swiped-both').forEach(r => r.classList.remove('swiped-both'));
+function setupSwipe(row) {
+  let startX = 0, startY = 0, curX = 0, dragging = false, swiped = false;
+  row.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    dragging = true; curX = 0;
+    swiped = row.classList.contains('swiped-both');
+  }, { passive: true });
+  row.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    curX = e.touches[0].clientX - startX;
+    const curY = e.touches[0].clientY - startY;
+    if (Math.abs(curY) > Math.abs(curX)) { dragging = false; return; }
+  }, { passive: true });
+  row.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    if (curX < -60 && !swiped) {
+      document.querySelectorAll('.inv-row.swiped-both').forEach(r => r.classList.remove('swiped-both'));
+      row.classList.add('swiped-both');
+    } else if (curX > 30 && swiped) {
+      row.classList.remove('swiped-both');
+    }
+    curX = 0;
+  });
 }
 
 let activeEditId = null;
